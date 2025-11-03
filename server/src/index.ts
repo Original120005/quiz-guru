@@ -3,7 +3,9 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import authRoutes from './routes/auth';
-import userRoutes from './routes/user';  // ← ДОБАВЬ ЭТУ СТРОКУ
+import userRoutes from './routes/user';  
+import categoryRoutes from './routes/categories'; 
+import quizRoutes from './routes/quiz'; 
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -13,11 +15,12 @@ app.use(cors());
 app.use(helmet());
 app.use(morgan('dev'));
 app.use(express.json());
-app.use('/api/auth', authRoutes);
-app.use('/api/user', userRoutes);  // ← ДОБАВЬ ЭТУ СТРОКУ
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/user', userRoutes);  
+app.use('/api/categories', categoryRoutes); 
+app.use('/api/quiz', quizRoutes); // ← раскомментируй когда создашь
 
 app.get('/', (req, res) => {
   res.json({ message: 'Quiz Guru API работает!' });

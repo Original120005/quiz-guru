@@ -1,4 +1,7 @@
 import { Request, Response } from 'express';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 // Анти-спам: один запрос в 5 сек на IP
 const lastRequest = new Map<string, number>();
@@ -76,5 +79,32 @@ export const generateQuiz = async (req: Request, res: Response) => {
     res.status(500).json({ 
       error: 'Grok устал Попробуй через минуту: ' + (err as any).message
     });
+  }
+};
+
+export const getQuizById = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    const quiz = await prisma.quiz.findUnique({
+      where: { id: parseInt(id) },
+      include: {
+        author: {
+          select: { name: true }
+        },
+        category: {
+          select: { name: true }
+        }
+      }
+    });
+
+    if (!quiz) {
+      return res.status(404).json({ error: 'Квиз не найден' });
+    }
+
+    res.json({ quiz });
+  } catch (error) {
+    console.error('Error fetching quiz:', error);
+    res.status(500).json({ error: 'Ошибка сервера' });
   }
 };

@@ -79,14 +79,13 @@ const sportQuizzes = [
 
 async function seedSportQuizzes() {
   console.log('Начинаем добавление квизов по спорту...');
-  
+
   for (const quizData of sportQuizzes) {
     try {
       await prisma.quiz.create({
         data: {
           ...quizData,
-          authorId: 1,
-          categoryId: 4 // Спорт
+          categoryId: 4 // Игры
         }
       });
       console.log(`✓ Добавлен квиз: "${quizData.title}"`);

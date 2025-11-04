@@ -7,7 +7,7 @@ interface Question {
   question: string;
   options: string[];
   correct: number;
-  fact?: string; // Факт теперь приходит из базы
+  fact?: string;
 }
 
 interface Quiz {
@@ -15,9 +15,6 @@ interface Quiz {
   title: string;
   description: string;
   questions: Question[];
-  author: {
-    name: string;
-  };
   category: {
     name: string;
   };
@@ -58,6 +55,26 @@ export default function QuizPage() {
     }
   };
 
+  const saveProgress = async (quizId: number, score: number, total: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      await fetch('http://localhost:5000/api/progress/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          quizId,
+          score,
+          total
+        })
+      });
+    } catch (error) {
+      console.error('Error saving progress:', error);
+    }
+  };
+
   const handleAnswerSelect = (answerIndex: number) => {
     if (!answered) {
       setSelectedAnswer(answerIndex);
@@ -69,13 +86,11 @@ export default function QuizPage() {
 
     setAnswered(true);
     
-    // Проверяем правильность ответа
     const isCorrect = selectedAnswer === quiz!.questions[currentQuestion].correct;
     if (isCorrect) {
       setScore(score + 1);
     }
 
-    // Устанавливаем факт для текущего вопроса (из базы данных)
     setCurrentFact(quiz!.questions[currentQuestion].fact || '');
   };
 
@@ -87,6 +102,7 @@ export default function QuizPage() {
       setCurrentFact('');
     } else {
       setShowResult(true);
+      saveProgress(quiz!.id, score, quiz!.questions.length);
     }
   };
 
@@ -185,7 +201,6 @@ export default function QuizPage() {
   }
 
   const question = quiz.questions[currentQuestion];
-  const isCorrect = selectedAnswer === question.correct;
 
   return (
     <div style={{ maxWidth: 800, margin: '40px auto', padding: '0 20px' }}>
@@ -230,18 +245,15 @@ export default function QuizPage() {
 
             if (answered) {
               if (index === question.correct) {
-                // Правильный ответ - зеленый
                 buttonStyle.background = '#d4edda';
                 buttonStyle.border = '2px solid #28a745';
                 buttonStyle.color = '#155724';
               } else if (index === selectedAnswer && index !== question.correct) {
-                // Неправильный ответ пользователя - красный
                 buttonStyle.background = '#f8d7da';
                 buttonStyle.border = '2px solid #dc3545';
                 buttonStyle.color = '#721c24';
               }
             } else if (selectedAnswer === index) {
-              // Выбранный ответ (до подтверждения)
               buttonStyle.background = '#f0f7ff';
               buttonStyle.border = '2px solid #0070f3';
             }

@@ -79,14 +79,13 @@ const animalsQuizzes = [
 
 async function seedAnimalsQuizzes() {
   console.log('Начинаем добавление квизов по животным...');
-  
+
   for (const quizData of animalsQuizzes) {
     try {
       await prisma.quiz.create({
         data: {
           ...quizData,
-          authorId: 1,
-          categoryId: 1 // Животные
+          categoryId: 1 // Игры
         }
       });
       console.log(`✓ Добавлен квиз: "${quizData.title}"`);

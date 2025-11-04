@@ -91,21 +91,13 @@ const geographyQuizzes = [
 
 async function seedGeographyQuizzes() {
   console.log('Начинаем добавление квизов по географии...');
-  
-  // Сначала удалим старые квизы по географии
-  await prisma.quiz.deleteMany({
-    where: {
-      categoryId: 3
-    }
-  });
 
   for (const quizData of geographyQuizzes) {
     try {
       await prisma.quiz.create({
         data: {
           ...quizData,
-          authorId: 1,
-          categoryId: 3 // География
+          categoryId: 3 
         }
       });
       console.log(`✓ Добавлен квиз: "${quizData.title}"`);
@@ -114,7 +106,7 @@ async function seedGeographyQuizzes() {
     }
   }
   
-  console.log('Готово! Добавлены квизы по географии с фактами');
+  console.log('Готово! Добавлены квизы по географии');
 }
 
 seedGeographyQuizzes()

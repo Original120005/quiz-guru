@@ -89,9 +89,6 @@ export const getQuizById = async (req: Request, res: Response) => {
     const quiz = await prisma.quiz.findUnique({
       where: { id: parseInt(id) },
       include: {
-        author: {
-          select: { name: true }
-        },
         category: {
           select: { name: true }
         }

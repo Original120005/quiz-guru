@@ -79,13 +79,12 @@ const gamesQuizzes = [
 
 async function seedGamesQuizzes() {
   console.log('Начинаем добавление квизов по играм...');
-  
+
   for (const quizData of gamesQuizzes) {
     try {
       await prisma.quiz.create({
         data: {
           ...quizData,
-          authorId: 1,
           categoryId: 2 // Игры
         }
       });

@@ -14,7 +14,7 @@ model User {
   name      String?
   avatar    String?
   score     Int      @default(0)
-  quizzes   Quiz[]
+  progress  UserQuizProgress[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -30,17 +30,30 @@ model Category {
   @@map("categories")
 }
 
-// Обнови модель Quiz - добавь связь с категорией
 model Quiz {
   id          Int       @id @default(autoincrement())
   title       String
   description String?
-  questions   Json      // Теперь будет содержать и факты
-  authorId    Int
-  author      User      @relation(fields: [authorId], references: [id])
+  questions   Json
   categoryId  Int?
   category    Category? @relation(fields: [categoryId], references: [id])
+  progress    UserQuizProgress[]
   createdAt   DateTime  @default(now())
 
   @@map("quizzes")
+}
+model UserQuizProgress {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  quizId    Int
+  quiz      Quiz     @relation(fields: [quizId], references: [id])
+  score     Int      // Количество правильных ответов
+  total     Int      // Общее количество вопросов
+  completed Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, quizId])
+  @@map("user_quiz_progress")
 }

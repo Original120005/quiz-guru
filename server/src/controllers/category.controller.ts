@@ -30,9 +30,6 @@ export const getQuizzesByCategory = async (req: Request, res: Response) => {
         category: { slug }
       },
       include: {
-        author: {
-          select: { name: true }
-        },
         category: {
           select: { name: true, slug: true }
         }

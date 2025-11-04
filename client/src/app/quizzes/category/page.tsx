@@ -20,6 +20,7 @@ interface QuizProgress {
   id: number;
   score: number;
   total: number;
+  attempts: number;
   completed: boolean;
   quiz: Quiz;
 }
@@ -120,8 +121,8 @@ export default function CategoryQuizzesPage() {
           const isPerfect = hasProgress && progress.score === progress.total;
           const isCompleted = hasProgress && progress.completed;
           const scoreText = progress ? `${progress.score}/${progress.total}` : null;
+          const attemptsText = progress ? progress.attempts : 0;
 
-          // Стили по умолчанию (не пройден)
           let cardStyle = {
             background: 'white',
             padding: 24,
@@ -158,7 +159,6 @@ export default function CategoryQuizzesPage() {
             fontWeight: 'bold' as const
           };
 
-          // Если квиз пройден идеально
           if (isPerfect) {
             cardStyle.background = '#f0fff4';
             cardStyle.border = '2px solid #28a745';
@@ -167,7 +167,6 @@ export default function CategoryQuizzesPage() {
             buttonStyle.background = '#28a745';
             resultTextStyle.color = '#28a745';
           }
-          // Если квиз пройден НЕ идеально
           else if (hasProgress && !isPerfect) {
             cardStyle.background = '#fff5f5';
             cardStyle.border = '2px solid #dc3545';
@@ -207,6 +206,10 @@ export default function CategoryQuizzesPage() {
                       <span style={{ margin: '0 12px' }}>•</span>
                       <span style={resultTextStyle}>
                         Результат: {scoreText}
+                      </span>
+                      <span style={{ margin: '0 12px' }}>•</span>
+                      <span style={{ color: '#6c757d', fontWeight: 'bold' }}>
+                        Попыток: {attemptsText}
                       </span>
                     </>
                   )}

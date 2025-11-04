@@ -50,6 +50,7 @@ model UserQuizProgress {
   quiz      Quiz     @relation(fields: [quizId], references: [id])
   score     Int      // Количество правильных ответов
   total     Int      // Общее количество вопросов
+  attempts  Int      @default(1) // ← ДОБАВЛЯЕМ СЧЕТЧИК ПОПЫТОК
   completed Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

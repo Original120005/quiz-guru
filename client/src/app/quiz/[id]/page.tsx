@@ -8,6 +8,7 @@ interface Question {
   options: string[];
   correct: number;
   fact?: string;
+  imageUrl?: string;
 }
 
 interface Quiz {
@@ -229,6 +230,24 @@ export default function QuizPage() {
         boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
       }}>
         <h2 style={{ marginBottom: 25 }}>{question.question}</h2>
+        
+        {question.imageUrl && (
+          <div style={{
+            marginBottom: 25,
+            textAlign: 'center'
+          }}>
+            <img 
+              src={question.imageUrl} 
+              alt="Иллюстрация к вопросу"
+              style={{
+                maxWidth: '100%',
+                maxHeight: 300,
+                borderRadius: 8,
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+              }}
+            />
+          </div>
+        )}
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {question.options.map((option, index) => {

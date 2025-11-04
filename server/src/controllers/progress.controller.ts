@@ -8,26 +8,47 @@ export const saveQuizProgress = async (req: Request, res: Response) => {
   const { quizId, score, total } = req.body;
 
   try {
-    const progress = await prisma.userQuizProgress.upsert({
+    // Сначала находим существующий прогресс
+    const existingProgress = await prisma.userQuizProgress.findUnique({
       where: {
         userId_quizId: {
           userId,
           quizId: parseInt(quizId)
         }
-      },
-      update: {
-        score,
-        total,
-        completed: score === total
-      },
-      create: {
-        userId,
-        quizId: parseInt(quizId),
-        score,
-        total,
-        completed: score === total
       }
     });
+
+    let progress;
+    
+    if (existingProgress) {
+      // Если прогресс уже есть - увеличиваем счетчик попыток
+      progress = await prisma.userQuizProgress.update({
+        where: {
+          userId_quizId: {
+            userId,
+            quizId: parseInt(quizId)
+          }
+        },
+        data: {
+          score,
+          total,
+          attempts: existingProgress.attempts + 1, // Увеличиваем попытки
+          completed: score === total
+        }
+      });
+    } else {
+      // Если прогресса нет - создаем новую запись
+      progress = await prisma.userQuizProgress.create({
+        data: {
+          userId,
+          quizId: parseInt(quizId),
+          score,
+          total,
+          attempts: 1, // Первая попытка
+          completed: score === total
+        }
+      });
+    }
 
     res.json({ progress });
   } catch (error) {

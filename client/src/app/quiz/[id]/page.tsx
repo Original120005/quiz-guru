@@ -7,6 +7,7 @@ interface Question {
   question: string;
   options: string[];
   correct: number;
+  fact?: string; // Факт теперь приходит из базы
 }
 
 interface Quiz {
@@ -32,7 +33,9 @@ export default function QuizPage() {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [score, setScore] = useState(0);
   const [showResult, setShowResult] = useState(false);
+  const [answered, setAnswered] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [currentFact, setCurrentFact] = useState('');
 
   useEffect(() => {
     fetchQuiz();
@@ -56,17 +59,32 @@ export default function QuizPage() {
   };
 
   const handleAnswerSelect = (answerIndex: number) => {
-    setSelectedAnswer(answerIndex);
+    if (!answered) {
+      setSelectedAnswer(answerIndex);
+    }
   };
 
-  const handleNextQuestion = () => {
-    if (selectedAnswer === quiz!.questions[currentQuestion].correct) {
+  const handleSubmitAnswer = () => {
+    if (selectedAnswer === null) return;
+
+    setAnswered(true);
+    
+    // Проверяем правильность ответа
+    const isCorrect = selectedAnswer === quiz!.questions[currentQuestion].correct;
+    if (isCorrect) {
       setScore(score + 1);
     }
 
+    // Устанавливаем факт для текущего вопроса (из базы данных)
+    setCurrentFact(quiz!.questions[currentQuestion].fact || '');
+  };
+
+  const handleNextQuestion = () => {
     if (currentQuestion < quiz!.questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
       setSelectedAnswer(null);
+      setAnswered(false);
+      setCurrentFact('');
     } else {
       setShowResult(true);
     }
@@ -77,6 +95,8 @@ export default function QuizPage() {
     setSelectedAnswer(null);
     setScore(0);
     setShowResult(false);
+    setAnswered(false);
+    setCurrentFact('');
   };
 
   if (loading) {
@@ -165,6 +185,7 @@ export default function QuizPage() {
   }
 
   const question = quiz.questions[currentQuestion];
+  const isCorrect = selectedAnswer === question.correct;
 
   return (
     <div style={{ maxWidth: 800, margin: '40px auto', padding: '0 20px' }}>
@@ -195,45 +216,101 @@ export default function QuizPage() {
         <h2 style={{ marginBottom: 25 }}>{question.question}</h2>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {question.options.map((option, index) => (
-            <button
-              key={index}
-              onClick={() => handleAnswerSelect(index)}
-              style={{
-                padding: '15px 20px',
-                border: `2px solid ${
-                  selectedAnswer === index ? '#0070f3' : '#e0e0e0'
-                }`,
-                background: selectedAnswer === index ? '#f0f7ff' : 'white',
-                borderRadius: 8,
-                cursor: 'pointer',
-                textAlign: 'left',
-                fontSize: 16,
-                transition: 'all 0.2s'
-              }}
-            >
-              {option}
-            </button>
-          ))}
+          {question.options.map((option, index) => {
+            let buttonStyle = {
+              padding: '15px 20px',
+              border: '2px solid #e0e0e0',
+              background: 'white',
+              borderRadius: 8,
+              cursor: answered ? 'default' : 'pointer',
+              textAlign: 'left' as const,
+              fontSize: 16,
+              transition: 'all 0.2s'
+            };
+
+            if (answered) {
+              if (index === question.correct) {
+                // Правильный ответ - зеленый
+                buttonStyle.background = '#d4edda';
+                buttonStyle.border = '2px solid #28a745';
+                buttonStyle.color = '#155724';
+              } else if (index === selectedAnswer && index !== question.correct) {
+                // Неправильный ответ пользователя - красный
+                buttonStyle.background = '#f8d7da';
+                buttonStyle.border = '2px solid #dc3545';
+                buttonStyle.color = '#721c24';
+              }
+            } else if (selectedAnswer === index) {
+              // Выбранный ответ (до подтверждения)
+              buttonStyle.background = '#f0f7ff';
+              buttonStyle.border = '2px solid #0070f3';
+            }
+
+            return (
+              <button
+                key={index}
+                onClick={() => handleAnswerSelect(index)}
+                style={buttonStyle}
+                disabled={answered}
+              >
+                {option}
+              </button>
+            );
+          })}
         </div>
 
-        <button
-          onClick={handleNextQuestion}
-          disabled={selectedAnswer === null}
-          style={{
-            width: '100%',
-            background: selectedAnswer === null ? '#ccc' : '#0070f3',
-            color: 'white',
-            border: 'none',
-            padding: '15px',
-            borderRadius: 8,
-            cursor: selectedAnswer === null ? 'not-allowed' : 'pointer',
-            fontSize: 16,
-            marginTop: 25
-          }}
-        >
-          {currentQuestion === quiz.questions.length - 1 ? 'Завершить квиз' : 'Следующий вопрос'}
-        </button>
+        {!answered ? (
+          <button
+            onClick={handleSubmitAnswer}
+            disabled={selectedAnswer === null}
+            style={{
+              width: '100%',
+              background: selectedAnswer === null ? '#ccc' : '#0070f3',
+              color: 'white',
+              border: 'none',
+              padding: '15px',
+              borderRadius: 8,
+              cursor: selectedAnswer === null ? 'not-allowed' : 'pointer',
+              fontSize: 16,
+              marginTop: 25
+            }}
+          >
+            Ответить
+          </button>
+        ) : (
+          <>
+            {currentFact && (
+              <div style={{
+                marginTop: 25,
+                padding: '15px 20px',
+                background: '#e7f3ff',
+                border: '1px solid #0070f3',
+                borderRadius: 8,
+                fontSize: 14,
+                color: '#0056b3'
+              }}>
+                <strong>📚 Интересный факт:</strong> {currentFact}
+              </div>
+            )}
+            
+            <button
+              onClick={handleNextQuestion}
+              style={{
+                width: '100%',
+                background: '#28a745',
+                color: 'white',
+                border: 'none',
+                padding: '15px',
+                borderRadius: 8,
+                cursor: 'pointer',
+                fontSize: 16,
+                marginTop: 20
+              }}
+            >
+              {currentQuestion === quiz.questions.length - 1 ? 'Завершить квиз' : 'Следующий вопрос'}
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

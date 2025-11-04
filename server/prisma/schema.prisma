@@ -35,11 +35,11 @@ model Quiz {
   id          Int       @id @default(autoincrement())
   title       String
   description String?
-  questions   Json
+  questions   Json      // Теперь будет содержать и факты
   authorId    Int
   author      User      @relation(fields: [authorId], references: [id])
-  categoryId  Int?      // ← ДОБАВЬ ЭТО
-  category    Category? @relation(fields: [categoryId], references: [id]) // ← И ЭТО
+  categoryId  Int?
+  category    Category? @relation(fields: [categoryId], references: [id])
   createdAt   DateTime  @default(now())
 
   @@map("quizzes")

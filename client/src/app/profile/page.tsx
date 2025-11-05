@@ -7,7 +7,7 @@ interface User {
   id: number;
   email: string;
   name: string;
-  score: number;
+  points: number;
   createdAt: string;
 }
 
@@ -16,33 +16,33 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-useEffect(() => {
-  const token = localStorage.getItem('token');
-  if (!token) {
-    router.push('/auth/login');
-    return;
-  }
-
-  fetch('http://localhost:5000/api/user/me', {
-    headers: { Authorization: `Bearer ${token}` },
-  })
-    .then(res => {
-      if (!res.ok) throw new Error('Unauthorized');
-      return res.json();
-    })
-    .then(data => {
-      if (data.user) {
-        setUser(data.user);
-      } else {
-        throw new Error('No user');
-      }
-    })
-    .catch(() => {
-      localStorage.removeItem('token');
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
       router.push('/auth/login');
+      return;
+    }
+
+    fetch('http://localhost:5000/api/user/me', {
+      headers: { Authorization: `Bearer ${token}` },
     })
-    .finally(() => setLoading(false));
-}, [router]);
+      .then(res => {
+        if (!res.ok) throw new Error('Unauthorized');
+        return res.json();
+      })
+      .then(data => {
+        if (data.user) {
+          setUser(data.user);
+        } else {
+          throw new Error('No user');
+        }
+      })
+      .catch(() => {
+        localStorage.removeItem('token');
+        router.push('/auth/login');
+      })
+      .finally(() => setLoading(false));
+  }, [router]);
 
   if (loading) return <div style={{ textAlign: 'center', padding: 50 }}>Загрузка...</div>;
 
@@ -79,15 +79,60 @@ useEffect(() => {
         </div>
 
         <div style={{ borderTop: '1px solid #eee', paddingTop: 20 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-            <span>Очки:</span>
-            <strong style={{ color: '#0070f3', fontSize: 20 }}>{user.score}</strong>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            marginBottom: 15,
+            padding: '15px',
+            background: 'linear-gradient(135deg, #0070f3, #0051a8)',
+            borderRadius: 12,
+            color: 'white'
+          }}>
+            <div>
+              <div style={{ fontWeight: 'bold', fontSize: 18 }}>Рейтинг очки</div>
+              <div style={{ fontSize: 12, opacity: 0.9, marginTop: 4 }}>
+                Зарабатывай очки за прохождение квизов!
+              </div>
+            </div>
+            <div style={{ 
+              background: 'rgba(255,255,255,0.2)',
+              padding: '12px 20px',
+              borderRadius: 20,
+              fontSize: 24,
+              fontWeight: 'bold',
+              minWidth: 80,
+              textAlign: 'center',
+              backdropFilter: 'blur(10px)'
+            }}>
+              {user.points || 0}
+            </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 15 }}>
             <span>На платформе с:</span>
-            <span>{new Date(user.createdAt).toLocaleDateString('ru-RU')}</span>
+            <span style={{ fontWeight: '500' }}>{new Date(user.createdAt).toLocaleDateString('ru-RU')}</span>
           </div>
         </div>
+
+        {/* Сноска с объяснением системы очков */}
+<div style={{
+  marginTop: 25,
+  padding: '15px',
+  background: '#f8f9fa',
+  border: '1px solid #dee2e6',
+  borderRadius: 8,
+  fontSize: 14,
+  color: '#495057'
+}}>
+  <strong>🎯 Как зарабатывать очки:</strong>
+  <ul style={{ margin: '8px 0 0 0', paddingLeft: 20 }}>
+    <li>Идеальный результат: <strong style={{color: '#28a745'}}>+10 очков</strong></li>
+    <li>Повторная попытка: <strong style={{color: '#dc3545'}}>-10 очков</strong></li>
+    <li>Все квизы категории: <strong style={{color: '#28a745'}}>+50 очков</strong></li>
+    <li>Очки не могут быть отрицательными</li>
+  </ul>
+</div>
       </div>
 
       <div style={{ marginTop: 30, textAlign: 'center' }}>
@@ -98,7 +143,8 @@ useEffect(() => {
           border: 'none',
           borderRadius: 8,
           fontSize: 16,
-          cursor: 'pointer'
+          cursor: 'pointer',
+          boxShadow: '0 4px 12px rgba(0,112,243,0.3)'
         }}>
           Играть в квиз
         </button>

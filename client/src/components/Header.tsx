@@ -2,20 +2,14 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Header() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { isLoggedIn, logout } = useAuth();
   const router = useRouter();
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    setIsLoggedIn(!!token);
-  }, []);
-
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    setIsLoggedIn(false);
+    logout();
     router.push('/');
   };
 

@@ -21,6 +21,12 @@ interface Quiz {
   };
 }
 
+interface PointsChange {
+  change: number;
+  total: number;
+  message: string;
+}
+
 export default function QuizPage() {
   const params = useParams();
   const router = useRouter();
@@ -34,6 +40,7 @@ export default function QuizPage() {
   const [answered, setAnswered] = useState(false);
   const [loading, setLoading] = useState(true);
   const [currentFact, setCurrentFact] = useState('');
+  const [pointsChange, setPointsChange] = useState<PointsChange | null>(null);
 
   useEffect(() => {
     fetchQuiz();
@@ -59,7 +66,7 @@ export default function QuizPage() {
   const saveProgress = async (quizId: number, score: number, total: number) => {
     try {
       const token = localStorage.getItem('token');
-      await fetch('http://localhost:5000/api/progress/save', {
+      const res = await fetch('http://localhost:5000/api/progress/save', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -71,6 +78,11 @@ export default function QuizPage() {
           total
         })
       });
+      
+      const data = await res.json();
+      if (data.points) {
+        setPointsChange(data.points);
+      }
     } catch (error) {
       console.error('Error saving progress:', error);
     }
@@ -114,6 +126,7 @@ export default function QuizPage() {
     setShowResult(false);
     setAnswered(false);
     setCurrentFact('');
+    setPointsChange(null);
   };
 
   if (loading) {
@@ -165,6 +178,26 @@ export default function QuizPage() {
              score >= quiz.questions.length / 2 ? '👍 Хороший результат!' :
              '💪 Попробуй еще раз, у тебя получится!'}
           </p>
+
+          {pointsChange && (
+            <div style={{
+              marginBottom: 30,
+              padding: '15px 20px',
+              background: pointsChange.change >= 0 ? '#d4edda' : '#f8d7da',
+              border: `1px solid ${pointsChange.change >= 0 ? '#28a745' : '#dc3545'}`,
+              borderRadius: 8,
+              fontSize: 14,
+              color: pointsChange.change >= 0 ? '#155724' : '#721c24'
+            }}>
+              <strong>🎯 Изменение очков: {pointsChange.change >= 0 ? '+' : ''}{pointsChange.change}</strong>
+              <div style={{ marginTop: 5, fontSize: 12 }}>
+                {pointsChange.message}
+              </div>
+              <div style={{ marginTop: 5, fontSize: 12, fontWeight: 'bold' }}>
+                Всего очков: {pointsChange.total}
+              </div>
+            </div>
+          )}
           
           <div style={{ display: 'flex', gap: 15, justifyContent: 'center' }}>
             <button

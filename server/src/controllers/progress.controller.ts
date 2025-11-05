@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { BadgeService } from '../services/badge.service';
 
 const prisma = new PrismaClient();
 
@@ -115,13 +116,17 @@ export const saveQuizProgress = async (req: Request, res: Response) => {
       }
     });
 
+    // Проверяем и выдаем бейджи
+    const earnedBadges = await BadgeService.checkAndAwardBadges(userId);
+
     res.json({ 
       progress, 
       points: {
         change: pointsChange,
         total: updatedUser.points,
         message: pointsMessage
-      }
+      },
+      earnedBadges // ← ДОБАВЛЯЕМ В ОТВЕТ
     });
 
   } catch (error) {

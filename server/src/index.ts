@@ -8,6 +8,7 @@ import categoryRoutes from './routes/categories';
 import quizRoutes from './routes/quiz'; 
 import progressRoutes from './routes/progress';
 import leaderboardRoutes from './routes/leaderboard';
+import badgeRoutes from './routes/badges';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -25,6 +26,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/quiz', quizRoutes); // ← раскомментируй когда создашь
 app.use('/api/progress', progressRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
+app.use('/api/badges', badgeRoutes);
 
 app.get('/', (req, res) => {
   res.json({ message: 'Quiz Guru API работает!' });

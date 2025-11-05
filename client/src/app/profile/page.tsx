@@ -11,8 +11,26 @@ interface User {
   createdAt: string;
 }
 
+interface Badge {
+  id: number;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  rarity: string;
+  type: string;
+}
+
+interface UserBadge {
+  id: number;
+  earnedAt: string;
+  badge: Badge;
+}
+
 export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null);
+  const [badges, setBadges] = useState<UserBadge[]>([]);
+  const [allBadges, setAllBadges] = useState<Badge[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -23,39 +41,77 @@ export default function ProfilePage() {
       return;
     }
 
-    fetch('http://localhost:5000/api/user/me', {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(res => {
-        if (!res.ok) throw new Error('Unauthorized');
-        return res.json();
-      })
-      .then(data => {
-        if (data.user) {
-          setUser(data.user);
-        } else {
-          throw new Error('No user');
-        }
-      })
-      .catch(() => {
-        localStorage.removeItem('token');
-        router.push('/auth/login');
-      })
-      .finally(() => setLoading(false));
+    fetchUserData(token);
+    fetchUserBadges(token);
+    fetchAllBadges(token);
   }, [router]);
 
-  if (loading) return <div style={{ textAlign: 'center', padding: 50 }}>Загрузка...</div>;
+  const fetchUserData = async (token: string) => {
+    try {
+      const res = await fetch('http://localhost:5000/api/user/me', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data.user);
+      }
+    } catch (error) {
+      console.error('Error fetching user:', error);
+    }
+  };
 
+  const fetchUserBadges = async (token: string) => {
+    try {
+      const res = await fetch('http://localhost:5000/api/badges/my-badges', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setBadges(data.badges || []);
+      }
+    } catch (error) {
+      console.error('Error fetching badges:', error);
+    }
+  };
+
+  const fetchAllBadges = async (token: string) => {
+    try {
+      const res = await fetch('http://localhost:5000/api/badges/all', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setAllBadges(data.badges || []);
+      }
+    } catch (error) {
+      console.error('Error fetching all badges:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Проверяем, есть ли бейдж у пользователя
+  const hasBadge = (badgeId: number) => {
+    return badges.some(userBadge => userBadge.badgeId === badgeId);
+  };
+
+  if (loading) return <div style={{ textAlign: 'center', padding: 50 }}>Загрузка...</div>;
   if (!user) return null;
 
   return (
-    <div style={{ maxWidth: 600, margin: '40px auto', padding: 20 }}>
+    <div style={{ maxWidth: 800, margin: '40px auto', padding: '0 20px' }}>
       <h1>Профиль</h1>
+      
+      {/* Основная информация пользователя */}
       <div style={{
         background: '#fff',
         padding: 30,
         borderRadius: 12,
-        boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+        marginBottom: 30
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 20 }}>
           <div style={{
@@ -116,23 +172,136 @@ export default function ProfilePage() {
         </div>
 
         {/* Сноска с объяснением системы очков */}
-<div style={{
-  marginTop: 25,
-  padding: '15px',
-  background: '#f8f9fa',
-  border: '1px solid #dee2e6',
-  borderRadius: 8,
-  fontSize: 14,
-  color: '#495057'
-}}>
-  <strong>🎯 Как зарабатывать очки:</strong>
-  <ul style={{ margin: '8px 0 0 0', paddingLeft: 20 }}>
-    <li>Идеальный результат: <strong style={{color: '#28a745'}}>+10 очков</strong></li>
-    <li>Повторная попытка: <strong style={{color: '#dc3545'}}>-10 очков</strong></li>
-    <li>Все квизы категории: <strong style={{color: '#28a745'}}>+50 очков</strong></li>
-    <li>Очки не могут быть отрицательными</li>
-  </ul>
-</div>
+        <div style={{
+          marginTop: 25,
+          padding: '15px',
+          background: '#f8f9fa',
+          border: '1px solid #dee2e6',
+          borderRadius: 8,
+          fontSize: 14,
+          color: '#495057'
+        }}>
+          <strong>🎯 Как зарабатывать очки:</strong>
+          <ul style={{ margin: '8px 0 0 0', paddingLeft: 20 }}>
+            <li>Идеальный результат: <strong style={{color: '#28a745'}}>+10 очков</strong></li>
+            <li>Повторная попытка: <strong style={{color: '#dc3545'}}>-10 очков</strong></li>
+            <li>Все квизы категории: <strong style={{color: '#28a745'}}>+50 очков</strong></li>
+            <li>Очки не могут быть отрицательными</li>
+          </ul>
+        </div>
+      </div>
+
+      {/* Раздел бейджей */}
+      <div style={{
+        background: '#fff',
+        padding: 30,
+        borderRadius: 12,
+        boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+      }}>
+        <h2 style={{ marginBottom: 20 }}>🏆 Достижения</h2>
+        
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
+          gap: 20
+        }}>
+          {allBadges.map((badge) => {
+            const userHasBadge = hasBadge(badge.id);
+            
+            return (
+              <div
+                key={badge.id}
+                style={{
+                  textAlign: 'center',
+                  padding: '15px 10px',
+                  background: userHasBadge ? '#f8f9fa' : 'transparent',
+                  borderRadius: 12,
+                  border: userHasBadge ? `2px solid ${badge.color}` : '2px solid #e0e0e0',
+                  transition: 'all 0.2s',
+                  opacity: userHasBadge ? 1 : 0.6,
+                  position: 'relative',
+                  cursor: 'pointer'
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                  e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.1)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+                title={userHasBadge ? badge.description : `Чтобы получить: ${badge.description}`}
+              >
+                <div style={{
+                  fontSize: 32,
+                  marginBottom: 8,
+                  filter: userHasBadge ? 'none' : 'grayscale(100%)'
+                }}>
+                  {badge.icon}
+                </div>
+                <div style={{
+                  fontWeight: 'bold',
+                  fontSize: 12,
+                  marginBottom: 4,
+                  color: userHasBadge ? '#333' : '#999'
+                }}>
+                  {badge.name}
+                </div>
+                
+                {/* Индикатор полученного бейджа */}
+                {userHasBadge && (
+                  <div style={{
+                    position: 'absolute',
+                    top: -5,
+                    right: -5,
+                    background: badge.color,
+                    color: 'white',
+                    borderRadius: '50%',
+                    width: 20,
+                    height: 20,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 10,
+                    fontWeight: 'bold'
+                  }}>
+                    ✓
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Статистика бейджей */}
+        <div style={{
+          marginTop: 25,
+          padding: '15px',
+          background: '#f8f9fa',
+          borderRadius: 8,
+          textAlign: 'center'
+        }}>
+          <div style={{ fontSize: 14, color: '#666' }}>
+            Получено: <strong>{badges.length}</strong> из <strong>{allBadges.length}</strong> бейджей
+          </div>
+          <div style={{
+            marginTop: 10,
+            height: 8,
+            background: '#e9ecef',
+            borderRadius: 4,
+            overflow: 'hidden'
+          }}>
+            <div 
+              style={{
+                height: '100%',
+                background: '#0070f3',
+                borderRadius: 4,
+                width: `${(badges.length / allBadges.length) * 100}%`,
+                transition: 'width 0.3s ease'
+              }}
+            />
+          </div>
+        </div>
       </div>
 
       <div style={{ marginTop: 30, textAlign: 'center' }}>

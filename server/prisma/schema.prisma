@@ -13,9 +13,10 @@ model User {
   password  String
   name      String?
   avatar    String?
-  score     Int      @default(0)  // старый score, можно переименовать или оставить
-  points    Int      @default(0)  // ← ДОБАВЛЯЕМ НОВЫЕ ОЧКИ
+  score     Int      @default(0)
+  points    Int      @default(0)
   progress  UserQuizProgress[]
+  badges    UserBadge[]  // ← ДОБАВЛЯЕМ СВЯЗЬ
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -58,4 +59,32 @@ model UserQuizProgress {
 
   @@unique([userId, quizId])
   @@map("user_quiz_progress")
+}
+
+model Badge {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String
+  icon        String   // эмодзи
+  color       String   // цвет для отображения
+  rarity      String   // common, rare, epic, legendary
+  type        String   // progressive, category, mastery
+  condition   Json     // условия получения
+  createdAt   DateTime @default(now())
+  
+  userBadges UserBadge[]
+  
+  @@map("badges")
+}
+
+model UserBadge {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  badgeId   Int
+  badge     Badge    @relation(fields: [badgeId], references: [id])
+  earnedAt  DateTime @default(now())
+  
+  @@unique([userId, badgeId])
+  @@map("user_badges")
 }

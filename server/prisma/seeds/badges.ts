@@ -139,17 +139,24 @@ const badges = [
       type: "perfect_quizzes",
       threshold: 30
     }
+  },
+  {
+    name: "Tryhard",
+    description: "Пройди 20 сложных квизов",
+    icon: "💪",
+    color: "#dc2626",
+    rarity: "epic",
+    type: "progressive",
+    condition: {
+      type: "hard_quizzes_completed",
+      threshold: 20
+    }
   }
 ];
 
 async function seedBadges() {
   console.log('Начинаем добавление бейджей...');
-
-  // Сначала удаляем старые бейджи если есть
-  await prisma.userBadge.deleteMany({});
-  await prisma.badge.deleteMany({});
-  console.log('Очищены старые бейджи');
-
+  
   for (const badgeData of badges) {
     try {
       await prisma.badge.create({

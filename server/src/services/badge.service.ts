@@ -51,6 +51,10 @@ export class BadgeService {
         case 'perfect_quizzes':
           shouldAward = await this.checkPerfectQuizzes(userId, condition.threshold);
           break;
+
+        case 'hard_quizzes_completed':
+          shouldAward = await this.checkHardQuizzesCompleted(userId, condition.threshold);
+          break;
       }
 
       if (shouldAward) {
@@ -76,7 +80,10 @@ export class BadgeService {
   // Проверка количества пройденных квизов
   private static async checkQuizzesCompleted(userId: number, threshold: number): Promise<boolean> {
     const completedQuizzes = await prisma.userQuizProgress.count({
-      where: { userId }
+      where: { 
+        userId,
+        completed: true
+      }
     });
     
     return completedQuizzes >= threshold;
@@ -111,10 +118,30 @@ export class BadgeService {
     const perfectQuizzes = await prisma.userQuizProgress.count({
       where: {
         userId,
-        completed: true
+        completed: true,
+        score: {
+          equals: prisma.userQuizProgress.fields.total
+        }
       }
     });
     
     return perfectQuizzes >= threshold;
+  }
+
+  // Проверка пройденных сложных квизов
+  private static async checkHardQuizzesCompleted(userId: number, threshold: number): Promise<boolean> {
+    const hardQuizzesCompleted = await prisma.userQuizProgress.count({
+      where: { 
+        userId,
+        completed: true,
+        quiz: {
+          is: {
+            difficulty: 'hard'
+          }
+        }
+      }
+    });
+    
+    return hardQuizzesCompleted >= threshold;
   }
 }

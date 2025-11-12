@@ -90,7 +90,7 @@ export const saveQuizProgress = async (req: Request, res: Response) => {
 
   try {
     // Находим пользователя и существующий прогресс
-    const [user, existingProgress] = await Promise.all([
+    const [user, existingProgress, quiz] = await Promise.all([
       prisma.user.findUnique({ where: { id: userId } }),
       prisma.userQuizProgress.findUnique({
         where: {
@@ -106,11 +106,17 @@ export const saveQuizProgress = async (req: Request, res: Response) => {
             }
           }
         }
+      }),
+      prisma.quiz.findUnique({
+        where: { id: parseInt(quizId) },
+        include: {
+          category: true
+        }
       })
     ]);
 
-    if (!user) {
-      return res.status(404).json({ error: 'Пользователь не найден' });
+    if (!user || !quiz) {
+      return res.status(404).json({ error: 'Пользователь или квиз не найден' });
     }
 
     let progress;
@@ -119,9 +125,9 @@ export const saveQuizProgress = async (req: Request, res: Response) => {
 
     // Логика начисления очков
     if (existingProgress) {
-      // Штраф за повторную попытку: -10 очков
-      pointsChange -= 10;
-      pointsMessage += 'Повторная попытка: -10 очков. ';
+      // Штраф за повторную попытку: -15 очков
+      pointsChange -= 15;
+      pointsMessage += 'Повторная попытка: -15 очков. ';
 
       // Обновляем прогресс и увеличиваем счетчик попыток
       progress = await prisma.userQuizProgress.update({
@@ -169,19 +175,26 @@ export const saveQuizProgress = async (req: Request, res: Response) => {
       });
     }
 
-    // Бонус за идеальный результат: +10 очков
+    // Бонусы за сложность квиза (только за идеальный результат)
     const isPerfect = score === total;
     if (isPerfect) {
-      pointsChange += 10;
-      pointsMessage += 'Идеальный результат: +10 очков. ';
+      const difficultyBonus = {
+        easy: 10,
+        medium: 20,
+        hard: 30
+      };
+      
+      const bonus = difficultyBonus[quiz.difficulty as keyof typeof difficultyBonus] || 0;
+      pointsChange += bonus;
+      pointsMessage += `Идеальный результат (${quiz.difficulty}): +${bonus} очков. `;
     }
 
     // Проверяем, пройдены ли все квизы в категории (только если у квиза есть категория)
-    if (progress.quiz.categoryId) {
-      const categoryCompleted = await checkCategoryCompletion(userId, progress.quiz.categoryId);
+    if (quiz.categoryId) {
+      const categoryCompleted = await checkCategoryCompletion(userId, quiz.categoryId);
       if (categoryCompleted) {
-        pointsChange += 50;
-        pointsMessage += 'Все квизы категории пройдены: +50 очков. ';
+        pointsChange += 100;
+        pointsMessage += 'Все квизы категории пройдены: +100 очков. ';
       }
     }
 

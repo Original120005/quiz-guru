@@ -40,20 +40,23 @@ model Quiz {
   categoryId  Int?
   category    Category? @relation(fields: [categoryId], references: [id])
   progress    UserQuizProgress[]
+  difficulty  String    @default("medium") 
   createdAt   DateTime  @default(now())
 
   @@map("quizzes")
 }
+
 model UserQuizProgress {
   id        Int      @id @default(autoincrement())
   userId    Int
   user      User     @relation(fields: [userId], references: [id])
   quizId    Int
   quiz      Quiz     @relation(fields: [quizId], references: [id])
-  score     Int      // Количество правильных ответов
-  total     Int      // Общее количество вопросов
-  attempts  Int      @default(1) // ← ДОБАВЛЯЕМ СЧЕТЧИК ПОПЫТОК
+  score     Int
+  total     Int
+  attempts  Int      @default(1)
   completed Boolean  @default(false)
+  answers   Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

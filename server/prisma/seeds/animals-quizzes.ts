@@ -6,6 +6,7 @@ const animalsQuizzes = [
   {
     title: "Мир дикой природы",
     description: "Интересные факты о животных со всего мира",
+    difficulty: "easy",
     questions: [
       {
         question: "Какое животное самое быстрое на суше?",
@@ -42,6 +43,7 @@ const animalsQuizzes = [
   {
     title: "Морские обитатели",
     description: "Загадочный мир океана и его жителей",
+    difficulty: "easy",
     questions: [
       {
         question: "Самое большое животное на Земле?",

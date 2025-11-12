@@ -6,6 +6,7 @@ const geographyQuizzes = [
   {
     title: "Страны и столицы мира",
     description: "Проверь знания географических столиц",
+    difficulty: "easy", 
     questions: [
       {
         question: "Какая столица у этой страны?",
@@ -54,6 +55,7 @@ const geographyQuizzes = [
   {
     title: "Природные чудеса мира",
     description: "Угадай географические объекты по фотографиям",
+    difficulty: "medium", 
     questions: [
       {
         question: "Что это за природное чудо?",

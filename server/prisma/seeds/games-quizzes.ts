@@ -6,6 +6,7 @@ const gamesQuizzes = [
   {
     title: "Легендарные видеоигры 2000-х",
     description: "Ностальгический тест по играм нулевых",
+    difficulty: "easy",
     questions: [
       {
         question: "В какой игре впервые появился крафтинг предметов?",
@@ -42,6 +43,7 @@ const gamesQuizzes = [
   {
     title: "Киберспорт и чемпионаты",
     description: "Тест о профессиональном гейминге и турнирах",
+    difficulty: "easy",
     questions: [
       {
         question: "Какой турнир по Dota 2 имеет самый большой призовой фонд?",

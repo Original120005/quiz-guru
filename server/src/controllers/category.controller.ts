@@ -23,18 +23,31 @@ export const getCategories = async (req: Request, res: Response) => {
 
 export const getQuizzesByCategory = async (req: Request, res: Response) => {
   const { slug } = req.params;
+  const { difficulty } = req.query;
 
   try {
+    const whereClause: any = {
+      category: { slug }
+    };
+
+    // Добавляем фильтр по сложности если указан
+    if (difficulty && difficulty !== 'all') {
+      whereClause.difficulty = difficulty;
+    }
+
     const quizzes = await prisma.quiz.findMany({
-      where: {
-        category: { slug }
-      },
+      where: whereClause,
       include: {
         category: {
           select: { name: true, slug: true }
         }
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: [
+        {
+          // Используем правильный синтаксис для порядка
+          createdAt: 'desc' as const
+        }
+      ]
     });
 
     res.json({ quizzes });

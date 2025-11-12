@@ -9,6 +9,7 @@ interface Quiz {
   title: string;
   description: string;
   questions: any[];
+  difficulty: string; // ← ДОБАВЛЯЕМ СЛОЖНОСТЬ
   category: {
     name: string;
     slug: string;
@@ -34,19 +35,34 @@ export default function CategoryQuizzesPage() {
   const [userProgress, setUserProgress] = useState<QuizProgress[]>([]);
   const [categoryName, setCategoryName] = useState('');
   const [loading, setLoading] = useState(true);
+  const [selectedDifficulty, setSelectedDifficulty] = useState('all'); // ← ДОБАВЛЯЕМ СОСТОЯНИЕ ДЛЯ ФИЛЬТРА
+
+  // Массив сложностей для фильтрации
+  const difficulties = [
+    { key: 'all', label: 'Все', color: '#0070f3' },
+    { key: 'easy', label: 'Легкий', color: '#22c55e' },
+    { key: 'medium', label: 'Средний', color: '#eab308' },
+    { key: 'hard', label: 'Сложный', color: '#ef4444' }
+  ];
 
   useEffect(() => {
     if (slug) {
       fetchQuizzes();
       fetchUserProgress();
     }
-  }, [slug]);
+  }, [slug, selectedDifficulty]); // ← ДОБАВЛЯЕМ selectedDifficulty В ЗАВИСИМОСТИ
 
   const fetchQuizzes = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/categories/${slug}/quizzes`);
+      let url = `http://localhost:5000/api/categories/${slug}/quizzes`;
+      if (selectedDifficulty !== 'all') {
+        url += `?difficulty=${selectedDifficulty}`;
+      }
+
+      const res = await fetch(url);
       const data = await res.json();
       setQuizzes(data.quizzes || []);
+      
       if (data.quizzes?.[0]?.category?.name) {
         setCategoryName(data.quizzes[0].category.name);
       } else {
@@ -89,6 +105,20 @@ export default function CategoryQuizzesPage() {
     return userProgress.find(progress => progress.quizId === quizId);
   };
 
+  // Функция для получения цвета и иконки сложности
+  const getDifficultyInfo = (difficulty: string) => {
+    switch (difficulty) {
+      case 'easy':
+        return { color: '#22c55e', label: 'Легкий', icon: '🟢' };
+      case 'medium':
+        return { color: '#eab308', label: 'Средний', icon: '🟡' };
+      case 'hard':
+        return { color: '#ef4444', label: 'Сложный', icon: '🔴' };
+      default:
+        return { color: '#6b7280', label: 'Не указано', icon: '⚪' };
+    }
+  };
+
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: 50 }}>
@@ -114,6 +144,46 @@ export default function CategoryQuizzesPage() {
         </p>
       </div>
 
+      {/* Фильтр по сложности */}
+      <div style={{ 
+        display: 'flex', 
+        gap: 10, 
+        marginBottom: 30,
+        flexWrap: 'wrap'
+      }}>
+        {difficulties.map(diff => (
+          <button 
+            key={diff.key}
+            onClick={() => setSelectedDifficulty(diff.key)}
+            style={{
+              background: selectedDifficulty === diff.key ? diff.color : 'white',
+              color: selectedDifficulty === diff.key ? 'white' : diff.color,
+              border: `2px solid ${diff.color}`,
+              padding: '10px 20px',
+              borderRadius: 25,
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: '14px',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseOver={(e) => {
+              if (selectedDifficulty !== diff.key) {
+                e.currentTarget.style.background = diff.color;
+                e.currentTarget.style.color = 'white';
+              }
+            }}
+            onMouseOut={(e) => {
+              if (selectedDifficulty !== diff.key) {
+                e.currentTarget.style.background = 'white';
+                e.currentTarget.style.color = diff.color;
+              }
+            }}
+          >
+            {diff.label}
+          </button>
+        ))}
+      </div>
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         {quizzes.map((quiz) => {
           const progress = getQuizProgress(quiz.id);
@@ -122,6 +192,7 @@ export default function CategoryQuizzesPage() {
           const isCompleted = hasProgress && progress.completed;
           const scoreText = progress ? `${progress.score}/${progress.total}` : null;
           const attemptsText = progress ? progress.attempts : 0;
+          const difficultyInfo = getDifficultyInfo(quiz.difficulty);
 
           let cardStyle = {
             background: 'white',
@@ -185,6 +256,25 @@ export default function CategoryQuizzesPage() {
                 {isPerfect ? '✓ Пройден' : 'Пройти снова'}
               </div>
               
+              {/* Бейдж сложности */}
+              <div style={{
+                position: 'absolute',
+                top: -10,
+                left: -10,
+                background: difficultyInfo.color,
+                color: 'white',
+                padding: '4px 12px',
+                borderRadius: 12,
+                fontSize: 12,
+                fontWeight: 'bold',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4
+              }}>
+                <span>{difficultyInfo.icon}</span>
+                <span>{difficultyInfo.label}</span>
+              </div>
+              
               <h3 style={{ margin: '0 0 8px 0', color: '#333' }}>
                 {quiz.title}
               </h3>
@@ -237,7 +327,7 @@ export default function CategoryQuizzesPage() {
           border: '1px solid #eee'
         }}>
           <h3 style={{ margin: '0 0 10px 0' }}>Квизов пока нет</h3>
-          <p>Будь первым, кто создаст квиз в этой категории!</p>
+          <p>Попробуй выбрать другую сложность или создай квиз первым!</p>
         </div>
       )}
     </div>

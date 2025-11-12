@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { getCategories, getQuizzesByCategory } from '../controllers/category.controller';
 
+
 const router = Router();
 
 router.get('/', getCategories);

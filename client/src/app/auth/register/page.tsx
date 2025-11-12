@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import Image from 'next/image';
 
 export default function RegisterPage() {
   const [form, setForm] = useState({ email: '', password: '', name: '' });
@@ -27,7 +28,7 @@ export default function RegisterPage() {
 
       if (res.ok) {
         localStorage.setItem('token', data.token);
-        login(); // ← ВЫЗЫВАЕМ LOGIN ИЗ КОНТЕКСТА
+        login();
         router.push('/profile');
       } else {
         setMessage('Ошибка: ' + (data.error || 'Попробуй снова'));
@@ -40,58 +41,68 @@ export default function RegisterPage() {
   };
 
   return (
-    <div style={{ maxWidth: 400, margin: '50px auto', padding: 20, border: '1px solid #ccc', borderRadius: 8 }}>
-      <h1>Регистрация</h1>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
-          required
-          style={{ width: '100%', padding: 10, margin: '10px 0' }}
-        />
-        <input
-          type="password"
-          placeholder="Пароль"
-          value={form.password}
-          onChange={(e) => setForm({ ...form, password: e.target.value })}
-          required
-          style={{ width: '100%', padding: 10, margin: '10px 0' }}
-        />
-        <input
-          type="text"
-          placeholder="Имя"
-          value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
-          style={{ width: '100%', padding: 10, margin: '10px 0' }}
-        />
-        <button 
-          type="submit" 
-          disabled={loading}
-          style={{ 
-            width: '100%', 
-            padding: 10, 
-            background: loading ? '#ccc' : '#0070f3', 
-            color: 'white', 
-            border: 'none',
-            borderRadius: 6,
-            cursor: loading ? 'not-allowed' : 'pointer'
-          }}
-        >
-          {loading ? 'Регистрация...' : 'Зарегистрироваться'}
-        </button>
-      </form>
-      {message && (
-        <p style={{ 
-          marginTop: 20, 
-          color: message.includes('Ошибка') ? 'red' : 'green',
-          textAlign: 'center',
-          fontSize: 14
-        }}>
-          {message}
-        </p>
-      )}
+    <div className="authContainer">
+      <div className="authCard">
+        <div className="authLogo">
+        </div>
+
+        <h1 className="authTitle">Создать аккаунт</h1>
+        <p className="authSubtitle">Присоединяйся к нашему сообществу</p>
+
+        <form onSubmit={handleSubmit} className="authForm">
+          <div className="formGroup">
+            <label htmlFor="name" className="formLabel">Имя</label>
+            <input
+              id="name"
+              type="text"
+              placeholder="Ваш Никнейм"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              className="formInput"
+            />
+          </div>
+
+          <div className="formGroup">
+            <label htmlFor="email" className="formLabel">Email</label>
+            <input
+              id="email"
+              type="email"
+              placeholder="your@email.com"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              required
+              className="formInput"
+            />
+          </div>
+
+          <div className="formGroup">
+            <label htmlFor="password" className="formLabel">Пароль</label>
+            <input
+              id="password"
+              type="password"
+              placeholder="Придумайте надежный пароль"
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              required
+              className="formInput"
+            />
+          </div>
+
+          <button 
+            type="submit" 
+            disabled={loading}
+            className="submitButton"
+          >
+            {loading ? 'Регистрация...' : 'Создать аккаунт'}
+          </button>
+        </form>
+
+        {message && (
+          <div className={`authMessage ${message.includes('Ошибка') ? 'error' : 'success'}`}>
+            {message}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

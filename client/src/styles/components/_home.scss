@@ -1,0 +1,186 @@
+.homeContainer {
+  padding: 40px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  min-height: calc(100vh - 80px);
+}
+
+.heroSection {
+  text-align: center;
+  padding: 80px 0 60px 0;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border-radius: 24px;
+  margin-bottom: 60px;
+  border: 1px solid #e2e8f0;
+}
+
+.heroTitle {
+  font-size: 3.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #0070f3 0%, #0051a8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 20px;
+  line-height: 1.1;
+}
+
+.heroDescription {
+  font-size: 1.25rem;
+  color: #64748b;
+  max-width: 600px;
+  margin: 0 auto 40px auto;
+  line-height: 1.6;
+}
+
+.heroButtons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.mainButton {
+  padding: 16px 32px;
+  border-radius: 12px;
+  text-decoration: none;
+  font-size: 1.1rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+
+  &.primary {
+    background: linear-gradient(135deg, #0070f3 0%, #0051a8 100%);
+    color: white;
+    box-shadow: 0 8px 25px rgba(0, 112, 243, 0.3);
+
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 35px rgba(0, 112, 243, 0.4);
+    }
+  }
+
+  &.secondary {
+    background: white;
+    color: #0070f3;
+    border: 2px solid #0070f3;
+
+    &:hover {
+      transform: translateY(-3px);
+      background: #f8fafc;
+    }
+  }
+}
+
+.sectionTitle {
+  text-align: center;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 50px;
+}
+
+.gameModesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 30px;
+}
+
+.gameModeCard {
+  background: white;
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+  border: 2px solid;
+  text-align: center;
+  transition: all 0.3s ease;
+  position: relative;
+  cursor: pointer;
+
+  &.active {
+    opacity: 1;
+    
+    &:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+    }
+  }
+
+  &.soon {
+    opacity: 0.7;
+    cursor: not-allowed;
+    border-color: #6c757d20;
+  }
+}
+
+.soonBadge {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: #6c757d;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.gameModeIcon {
+  font-size: 3rem;
+  margin-bottom: 20px;
+}
+
+.gameModeTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.gameModeDescription {
+  color: #64748b;
+  line-height: 1.6;
+  margin-bottom: 25px;
+}
+
+.actionButton {
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-weight: 600;
+  display: inline-block;
+  transition: all 0.2s ease;
+
+  &.active {
+    color: white;
+
+    &:hover {
+      transform: scale(1.05);
+    }
+  }
+
+  &.inactive {
+    background: #e2e8f0;
+    color: #64748b;
+  }
+}
+
+.footerSection {
+  margin-top: 80px;
+  padding: 40px;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border-radius: 20px;
+  text-align: center;
+  border: 1px solid #e2e8f0;
+}
+
+.footerText {
+  color: #64748b;
+  font-size: 1.1rem;
+  margin-bottom: 20px;
+}
+
+.featuresList {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+  color: #0070f3;
+  font-weight: 600;
+}

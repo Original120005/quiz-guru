@@ -4,6 +4,86 @@ import { BadgeService } from '../services/badge.service';
 
 const prisma = new PrismaClient();
 
+// Сохраняем ответ на вопрос
+export const saveQuestionAnswer = async (req: Request, res: Response) => {
+  const userId = req.userId!;
+  const { quizId, questionIndex, selectedAnswer, isCorrect } = req.body;
+
+  try {
+    // Находим существующий прогресс
+    let progress = await prisma.userQuizProgress.findUnique({
+      where: {
+        userId_quizId: {
+          userId,
+          quizId: parseInt(quizId)
+        }
+      }
+    });
+
+    const answers = progress?.answers ? (progress.answers as any) : {};
+    
+    // Сохраняем ответ на текущий вопрос
+    answers[questionIndex] = {
+      selectedAnswer,
+      isCorrect,
+      answeredAt: new Date().toISOString()
+    };
+
+    if (progress) {
+      // Обновляем существующий прогресс
+      progress = await prisma.userQuizProgress.update({
+        where: {
+          userId_quizId: {
+            userId,
+            quizId: parseInt(quizId)
+          }
+        },
+        data: {
+          answers: answers
+        }
+      });
+    } else {
+      // Создаем новый прогресс
+      progress = await prisma.userQuizProgress.create({
+        data: {
+          userId,
+          quizId: parseInt(quizId),
+          score: 0,
+          total: 0,
+          answers: answers
+        }
+      });
+    }
+
+    res.json({ success: true, progress });
+  } catch (error) {
+    console.error('Error saving question answer:', error);
+    res.status(500).json({ error: 'Ошибка сохранения ответа' });
+  }
+};
+
+// Получаем прогресс по квизу
+export const getQuizProgress = async (req: Request, res: Response) => {
+  const userId = req.userId!;
+  const { quizId } = req.params;
+
+  try {
+    const progress = await prisma.userQuizProgress.findUnique({
+      where: {
+        userId_quizId: {
+          userId,
+          quizId: parseInt(quizId)
+        }
+      }
+    });
+
+    res.json({ progress });
+  } catch (error) {
+    console.error('Error fetching quiz progress:', error);
+    res.status(500).json({ error: 'Ошибка получения прогресса' });
+  }
+};
+
 export const saveQuizProgress = async (req: Request, res: Response) => {
   const userId = req.userId!;
   const { quizId, score, total } = req.body;
@@ -126,7 +206,7 @@ export const saveQuizProgress = async (req: Request, res: Response) => {
         total: updatedUser.points,
         message: pointsMessage
       },
-      earnedBadges // ← ДОБАВЛЯЕМ В ОТВЕТ
+      earnedBadges
     });
 
   } catch (error) {
@@ -150,7 +230,8 @@ async function checkCategoryCompletion(userId: number, categoryId: number): Prom
     const userProgress = await prisma.userQuizProgress.findMany({
       where: {
         userId,
-        quizId: { in: categoryQuizzes.map(q => q.id) }
+        quizId: { in: categoryQuizzes.map(q => q.id) },
+        completed: true
       }
     });
 

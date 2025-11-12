@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import Image from 'next/image';
 
 export default function LoginPage() {
   const [form, setForm] = useState({ email: '', password: '' });
@@ -28,7 +29,7 @@ export default function LoginPage() {
 
       if (res.ok) {
         localStorage.setItem('token', data.token);
-        login(); // ← ВЫЗЫВАЕМ LOGIN ИЗ КОНТЕКСТА
+        login();
         router.push('/profile');
       } else {
         setMessage('Ошибка: ' + (data.error || 'Попробуй снова'));
@@ -41,54 +42,60 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={{ maxWidth: 400, margin: '50px auto', padding: 20, border: '1px solid #ccc', borderRadius: 8 }}>
-      <h1>Вход</h1>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
-          required
-          style={{ width: '100%', padding: 10, margin: '10px 0' }}
-        />
-        <input
-          type="password"
-          placeholder="Пароль"
-          value={form.password}
-          onChange={(e) => setForm({ ...form, password: e.target.value })}
-          required
-          style={{ width: '100%', padding: 10, margin: '10px 0' }}
-        />
-        <button 
-          type="submit" 
-          disabled={loading}
-          style={{ 
-            width: '100%', 
-            padding: 10, 
-            background: loading ? '#ccc' : '#0070f3', 
-            color: 'white', 
-            border: 'none',
-            borderRadius: 6,
-            cursor: loading ? 'not-allowed' : 'pointer'
-          }}
-        >
-          {loading ? 'Вход...' : 'Войти'}
-        </button>
-      </form>
-      {message && (
-        <p style={{ 
-          marginTop: 20, 
-          color: message.includes('Ошибка') ? 'red' : 'green',
-          textAlign: 'center',
-          fontSize: 14
-        }}>
-          {message}
-        </p>
-      )}
-      <p style={{ textAlign: 'center', marginTop: 15 }}>
-        Нет аккаунта? <Link href="/auth/register" style={{ color: '#0070f3' }}>Регистрация</Link>
-      </p>
+    <div className="authContainer">
+      <div className="authCard">
+        <div className="authLogo">
+        </div>
+
+        <h1 className="authTitle">С возвращением!</h1>
+        <p className="authSubtitle">Войди в свой аккаунт чтобы продолжить</p>
+
+        <form onSubmit={handleSubmit} className="authForm">
+          <div className="formGroup">
+            <label htmlFor="email" className="formLabel">Email</label>
+            <input
+              id="email"
+              type="email"
+              placeholder="your@email.com"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              required
+              className="formInput"
+            />
+          </div>
+
+          <div className="formGroup">
+            <label htmlFor="password" className="formLabel">Пароль</label>
+            <input
+              id="password"
+              type="password"
+              placeholder="Введите ваш пароль"
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              required
+              className="formInput"
+            />
+          </div>
+
+          <button 
+            type="submit" 
+            disabled={loading}
+            className="submitButton"
+          >
+            {loading ? 'Вход...' : 'Войти в аккаунт'}
+          </button>
+        </form>
+
+        {message && (
+          <div className={`authMessage ${message.includes('Ошибка') ? 'error' : 'success'}`}>
+            {message}
+          </div>
+        )}
+
+        <div className="authLink">
+          Еще нет аккаунта? <Link href="/auth/register">Зарегистрироваться</Link>
+        </div>
+      </div>
     </div>
   );
 }

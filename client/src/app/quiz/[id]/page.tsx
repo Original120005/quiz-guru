@@ -27,6 +27,17 @@ interface PointsChange {
   message: string;
 }
 
+interface QuizProgress {
+  answers: {
+    [key: number]: {
+      selectedAnswer: number;
+      isCorrect: boolean;
+      answeredAt: string;
+    }
+  };
+  completed: boolean;
+}
+
 export default function QuizPage() {
   const params = useParams();
   const router = useRouter();
@@ -41,9 +52,11 @@ export default function QuizPage() {
   const [loading, setLoading] = useState(true);
   const [currentFact, setCurrentFact] = useState('');
   const [pointsChange, setPointsChange] = useState<PointsChange | null>(null);
+  const [quizProgress, setQuizProgress] = useState<QuizProgress | null>(null);
 
   useEffect(() => {
     fetchQuiz();
+    fetchQuizProgress();
   }, [quizId]);
 
   const fetchQuiz = async () => {
@@ -63,7 +76,83 @@ export default function QuizPage() {
     }
   };
 
-  const saveProgress = async (quizId: number, score: number, total: number) => {
+  // Функция получения прогресса
+  const fetchQuizProgress = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      const res = await fetch(`http://localhost:5000/api/progress/quiz/${quizId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setQuizProgress(data.progress);
+        
+        // Если квиз уже завершен, показываем результаты
+        if (data.progress?.completed) {
+          setShowResult(true);
+        } else if (data.progress?.answers) {
+          // Восстанавливаем прогресс из сохраненных ответов
+          restoreProgress(data.progress.answers);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching quiz progress:', error);
+    }
+  };
+
+  // Восстанавливаем прогресс из сохраненных ответов
+  const restoreProgress = (answers: any) => {
+    let restoredScore = 0;
+    const answeredQuestions = Object.keys(answers).map(Number);
+    
+    // Считаем правильные ответы
+    answeredQuestions.forEach(questionIndex => {
+      if (answers[questionIndex].isCorrect) {
+        restoredScore++;
+      }
+    });
+    
+    setScore(restoredScore);
+    
+    // Если есть ответ на текущий вопрос, блокируем его
+    if (answers[currentQuestion]) {
+      setSelectedAnswer(answers[currentQuestion].selectedAnswer);
+      setAnswered(true);
+      setCurrentFact(quiz?.questions[currentQuestion]?.fact || '');
+    }
+  };
+
+  // Сохраняем ответ на вопрос
+  const saveQuestionAnswer = async (questionIndex: number, answerIndex: number, isCorrect: boolean) => {
+    try {
+      const token = localStorage.getItem('token');
+      await fetch('http://localhost:5000/api/progress/save-answer', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          quizId: parseInt(quizId),
+          questionIndex,
+          selectedAnswer: answerIndex,
+          isCorrect
+        })
+      });
+    } catch (error) {
+      console.error('Error saving question answer:', error);
+    }
+  };
+
+  const saveFinalProgress = async (quizId: number, score: number, total: number) => {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch('http://localhost:5000/api/progress/save', {
@@ -75,7 +164,8 @@ export default function QuizPage() {
         body: JSON.stringify({
           quizId,
           score,
-          total
+          total,
+          completed: true
         })
       });
       
@@ -89,17 +179,21 @@ export default function QuizPage() {
   };
 
   const handleAnswerSelect = (answerIndex: number) => {
-    if (!answered) {
+    if (!answered && !quizProgress?.completed) {
       setSelectedAnswer(answerIndex);
     }
   };
 
-  const handleSubmitAnswer = () => {
-    if (selectedAnswer === null) return;
+  const handleSubmitAnswer = async () => {
+    if (selectedAnswer === null || quizProgress?.completed) return;
+
+    const isCorrect = selectedAnswer === quiz!.questions[currentQuestion].correct;
+    
+    // Сохраняем ответ сразу
+    await saveQuestionAnswer(currentQuestion, selectedAnswer, isCorrect);
 
     setAnswered(true);
     
-    const isCorrect = selectedAnswer === quiz!.questions[currentQuestion].correct;
     if (isCorrect) {
       setScore(score + 1);
     }
@@ -115,7 +209,7 @@ export default function QuizPage() {
       setCurrentFact('');
     } else {
       setShowResult(true);
-      saveProgress(quiz!.id, score, quiz!.questions.length);
+      saveFinalProgress(quiz!.id, score, quiz!.questions.length);
     }
   };
 
@@ -127,7 +221,57 @@ export default function QuizPage() {
     setAnswered(false);
     setCurrentFact('');
     setPointsChange(null);
+    setQuizProgress(null);
   };
+
+  // Если квиз уже завершен, показываем сообщение
+  if (quizProgress?.completed && !showResult) {
+    return (
+      <div style={{ maxWidth: 600, margin: '40px auto', padding: '0 20px' }}>
+        <div style={{
+          background: 'white',
+          padding: 40,
+          borderRadius: 12,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+          textAlign: 'center'
+        }}>
+          <h1>Квиз уже пройден!</h1>
+          <p style={{ fontSize: 18, color: '#666', marginBottom: 30 }}>
+            Ты уже завершил этот квиз. Хочешь пройти его заново?
+          </p>
+          <button
+            onClick={handleRestart}
+            style={{
+              background: '#0070f3',
+              color: 'white',
+              border: 'none',
+              padding: '12px 24px',
+              borderRadius: 6,
+              cursor: 'pointer',
+              fontSize: 16,
+              marginRight: 15
+            }}
+          >
+            Пройти заново
+          </button>
+          <button
+            onClick={() => router.push('/quizzes')}
+            style={{
+              background: 'white',
+              color: '#0070f3',
+              border: '1px solid #0070f3',
+              padding: '12px 24px',
+              borderRadius: 6,
+              cursor: 'pointer',
+              fontSize: 16
+            }}
+          >
+            Другие квизы
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -315,7 +459,7 @@ export default function QuizPage() {
                 key={index}
                 onClick={() => handleAnswerSelect(index)}
                 style={buttonStyle}
-                disabled={answered}
+                disabled={answered || quizProgress?.completed}
               >
                 {option}
               </button>
@@ -326,7 +470,7 @@ export default function QuizPage() {
         {!answered ? (
           <button
             onClick={handleSubmitAnswer}
-            disabled={selectedAnswer === null}
+            disabled={selectedAnswer === null || quizProgress?.completed}
             style={{
               width: '100%',
               background: selectedAnswer === null ? '#ccc' : '#0070f3',

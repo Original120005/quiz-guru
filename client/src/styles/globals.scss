@@ -1,8 +1,13 @@
-// Новый синтаксис вместо @import
+
 @use './components/header';
 @use './components/home';
 @use './components/auth';
-// Глобальные стили
+@use './components/quiz';
+@use './components/profile';
+@use './components/leaderboard';
+@use './components/quizzes';
+@use './components/category';
+
 * {
   margin: 0;
   padding: 0;

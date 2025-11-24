@@ -9,7 +9,7 @@ interface Quiz {
   title: string;
   description: string;
   questions: any[];
-  difficulty: string; // ← ДОБАВЛЯЕМ СЛОЖНОСТЬ
+  difficulty: string;
   category: {
     name: string;
     slug: string;
@@ -35,9 +35,8 @@ export default function CategoryQuizzesPage() {
   const [userProgress, setUserProgress] = useState<QuizProgress[]>([]);
   const [categoryName, setCategoryName] = useState('');
   const [loading, setLoading] = useState(true);
-  const [selectedDifficulty, setSelectedDifficulty] = useState('all'); // ← ДОБАВЛЯЕМ СОСТОЯНИЕ ДЛЯ ФИЛЬТРА
+  const [selectedDifficulty, setSelectedDifficulty] = useState('all');
 
-  // Массив сложностей для фильтрации
   const difficulties = [
     { key: 'all', label: 'Все', color: '#0070f3' },
     { key: 'easy', label: 'Легкий', color: '#22c55e' },
@@ -50,7 +49,7 @@ export default function CategoryQuizzesPage() {
       fetchQuizzes();
       fetchUserProgress();
     }
-  }, [slug, selectedDifficulty]); // ← ДОБАВЛЯЕМ selectedDifficulty В ЗАВИСИМОСТИ
+  }, [slug, selectedDifficulty]);
 
   const fetchQuizzes = async () => {
     try {
@@ -105,7 +104,6 @@ export default function CategoryQuizzesPage() {
     return userProgress.find(progress => progress.quizId === quizId);
   };
 
-  // Функция для получения цвета и иконки сложности
   const getDifficultyInfo = (difficulty: string) => {
     switch (difficulty) {
       case 'easy':
@@ -120,63 +118,34 @@ export default function CategoryQuizzesPage() {
   };
 
   if (loading) {
-    return (
-      <div style={{ textAlign: 'center', padding: 50 }}>
-        <div>Загрузка квизов...</div>
-      </div>
-    );
+    return <div className="loading">Загрузка квизов...</div>;
   }
 
   return (
-    <div style={{ maxWidth: 1000, margin: '40px auto', padding: '0 20px' }}>
-      <div style={{ marginBottom: 30 }}>
-        <Link 
-          href="/quizzes"
-          style={{ color: '#0070f3', textDecoration: 'none' }}
-        >
+    <div className="categoryContainer">
+      <div className="categoryHeader">
+        <Link href="/quizzes" className="backLink">
           ← Назад к категориям
         </Link>
-        <h1 style={{ margin: '10px 0 5px 0' }}>
+        <h1 className="categoryTitle">
           {categoryName || 'Квизы'}
         </h1>
-        <p style={{ color: '#666', margin: 0 }}>
+        <p className="categoryStats">
           {quizzes.length} квиз{quizzes.length === 1 ? '' : quizzes.length > 1 && quizzes.length < 5 ? 'а' : 'ов'}
         </p>
       </div>
 
       {/* Фильтр по сложности */}
-      <div style={{ 
-        display: 'flex', 
-        gap: 10, 
-        marginBottom: 30,
-        flexWrap: 'wrap'
-      }}>
+      <div className="difficultyFilter">
         {difficulties.map(diff => (
           <button 
             key={diff.key}
             onClick={() => setSelectedDifficulty(diff.key)}
+            className={`difficultyButton ${selectedDifficulty === diff.key ? 'active' : ''}`}
             style={{
+              borderColor: diff.color,
               background: selectedDifficulty === diff.key ? diff.color : 'white',
-              color: selectedDifficulty === diff.key ? 'white' : diff.color,
-              border: `2px solid ${diff.color}`,
-              padding: '10px 20px',
-              borderRadius: 25,
-              cursor: 'pointer',
-              fontWeight: '600',
-              fontSize: '14px',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseOver={(e) => {
-              if (selectedDifficulty !== diff.key) {
-                e.currentTarget.style.background = diff.color;
-                e.currentTarget.style.color = 'white';
-              }
-            }}
-            onMouseOut={(e) => {
-              if (selectedDifficulty !== diff.key) {
-                e.currentTarget.style.background = 'white';
-                e.currentTarget.style.color = diff.color;
-              }
+              color: selectedDifficulty === diff.key ? 'white' : diff.color
             }}
           >
             {diff.label}
@@ -184,7 +153,7 @@ export default function CategoryQuizzesPage() {
         ))}
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div className="quizzesList">
         {quizzes.map((quiz) => {
           const progress = getQuizProgress(quiz.id);
           const hasProgress = !!progress;
@@ -194,111 +163,36 @@ export default function CategoryQuizzesPage() {
           const attemptsText = progress ? progress.attempts : 0;
           const difficultyInfo = getDifficultyInfo(quiz.difficulty);
 
-          let cardStyle = {
-            background: 'white',
-            padding: 24,
-            borderRadius: 12,
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-            border: '1px solid #eee',
-            position: 'relative' as const
-          };
-
-          let badgeStyle = {
-            position: 'absolute' as const,
-            top: -10,
-            right: -10,
-            color: 'white',
-            padding: '4px 8px',
-            borderRadius: 12,
-            fontSize: 12,
-            fontWeight: 'bold' as const,
-            display: 'none' as const
-          };
-
-          let buttonStyle = {
-            background: '#0070f3',
-            color: 'white',
-            border: 'none',
-            padding: '8px 16px',
-            borderRadius: 6,
-            cursor: 'pointer',
-            fontSize: 14
-          };
-
-          let resultTextStyle = {
-            color: '#0070f3',
-            fontWeight: 'bold' as const
-          };
-
-          if (isPerfect) {
-            cardStyle.background = '#f0fff4';
-            cardStyle.border = '2px solid #28a745';
-            badgeStyle.background = '#28a745';
-            badgeStyle.display = 'block';
-            buttonStyle.background = '#28a745';
-            resultTextStyle.color = '#28a745';
-          }
-          else if (hasProgress && !isPerfect) {
-            cardStyle.background = '#fff5f5';
-            cardStyle.border = '2px solid #dc3545';
-            badgeStyle.background = '#dc3545';
-            badgeStyle.display = 'block';
-            buttonStyle.background = '#dc3545';
-            resultTextStyle.color = '#dc3545';
-          }
+          const cardClass = `quizCard ${isPerfect ? 'perfect' : isCompleted ? 'completed' : ''}`;
 
           return (
-            <div
-              key={quiz.id}
-              style={cardStyle}
-            >
-              <div style={badgeStyle}>
+            <div key={quiz.id} className={cardClass}>
+              <div className="completionBadge">
                 {isPerfect ? '✓ Пройден' : 'Пройти снова'}
               </div>
               
-              {/* Бейдж сложности */}
-              <div style={{
-                position: 'absolute',
-                top: -10,
-                left: -10,
-                background: difficultyInfo.color,
-                color: 'white',
-                padding: '4px 12px',
-                borderRadius: 12,
-                fontSize: 12,
-                fontWeight: 'bold',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 4
-              }}>
+              <div 
+                className="difficultyBadge"
+                style={{ background: difficultyInfo.color }}
+              >
                 <span>{difficultyInfo.icon}</span>
                 <span>{difficultyInfo.label}</span>
               </div>
               
-              <h3 style={{ margin: '0 0 8px 0', color: '#333' }}>
-                {quiz.title}
-              </h3>
-              <p style={{ margin: '0 0 12px 0', color: '#666' }}>
-                {quiz.description}
-              </p>
+              <h3 className="quizTitle">{quiz.title}</h3>
+              <p className="quizDescription">{quiz.description}</p>
               
-              <div style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center',
-                fontSize: 14,
-                color: '#888'
-              }}>
-                <div>
+              <div className="quizFooter">
+                <div className="quizInfo">
                   <span>{quiz.questions.length} вопросов</span>
                   {scoreText && (
                     <>
-                      <span style={{ margin: '0 12px' }}>•</span>
-                      <span style={resultTextStyle}>
+                      <span>•</span>
+                      <span className="resultText">
                         Результат: {scoreText}
                       </span>
-                      <span style={{ margin: '0 12px' }}>•</span>
-                      <span style={{ color: '#6c757d', fontWeight: 'bold' }}>
+                      <span>•</span>
+                      <span className="attemptsText">
                         Попыток: {attemptsText}
                       </span>
                     </>
@@ -306,7 +200,7 @@ export default function CategoryQuizzesPage() {
                 </div>
                 
                 <button
-                  style={buttonStyle}
+                  className="startButton"
                   onClick={() => router.push(`/quiz/${quiz.id}`)}
                 >
                   {hasProgress ? 'Пройти снова' : 'Начать квиз'}
@@ -318,15 +212,8 @@ export default function CategoryQuizzesPage() {
       </div>
 
       {quizzes.length === 0 && (
-        <div style={{ 
-          textAlign: 'center', 
-          padding: 60, 
-          color: '#666',
-          background: 'white',
-          borderRadius: 12,
-          border: '1px solid #eee'
-        }}>
-          <h3 style={{ margin: '0 0 10px 0' }}>Квизов пока нет</h3>
+        <div className="emptyState">
+          <h3>Квизов пока нет</h3>
           <p>Попробуй выбрать другую сложность или создай квиз первым!</p>
         </div>
       )}

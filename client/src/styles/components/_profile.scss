@@ -122,6 +122,236 @@
   }
 }
 
+// Стили для секции запросов в друзья
+.friendRequestsSection {
+  margin: 20px 0;
+  padding: 20px;
+  background: #fffbf0;
+  border-radius: 16px;
+  border: 2px solid #fef3c7;
+}
+
+.requestsTitle {
+  margin: 0 0 15px 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #92400e;
+}
+
+.requestsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.requestCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #fef3c7;
+  transition: all 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.requestUser {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.userAvatarSmall {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0070f3 0%, #0051a8 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+  flex-shrink: 0;
+  
+  img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+}
+
+.userInfoSmall {
+  .userName {
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 4px;
+  }
+  
+  .userDetails {
+    font-size: 12px;
+    color: #64748b;
+    
+    span {
+      margin-right: 6px;
+      
+      &:last-child {
+        margin-right: 0;
+      }
+    }
+  }
+}
+
+.requestActions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.acceptButton {
+  background: #22c55e;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #16a34a;
+    transform: translateY(-1px);
+  }
+}
+
+.declineButton {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+  }
+}
+
+.loadingRequests {
+  text-align: center;
+  padding: 20px;
+  color: #64748b;
+}
+
+// Стили для секции друзей
+.friendsSection {
+  margin: 30px 0;
+  padding: 25px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+}
+
+.friendsTitle {
+  margin: 0 0 20px 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.friendsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.friendCard {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #f1f5f9;
+    transform: translateX(4px);
+  }
+}
+
+.friendAvatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0070f3 0%, #0051a8 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 18px;
+  
+  img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+}
+
+.friendInfo {
+  flex: 1;
+  
+  .friendName {
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 4px;
+  }
+  
+  .friendPoints {
+    font-size: 14px;
+    color: #64748b;
+  }
+}
+
+.emptyFriends {
+  text-align: center;
+  padding: 30px;
+  color: #64748b;
+  
+  p {
+    margin: 0 0 15px 0;
+  }
+}
+
+.addFriendsButton {
+  background: #0070f3;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  
+  &:hover {
+    background: #0051a8;
+  }
+}
+
 .pointsExplanation {
   margin-top: 30px;
   padding: 25px;
@@ -341,4 +571,52 @@
   color: #64748b;
   font-size: 18px;
   font-weight: 500;
+}
+
+.friendRequestButton {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+  
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+  
+  // Статусы кнопки
+  &.none {
+    background: #0070f3;
+    color: white;
+    
+    &:hover:not(:disabled) {
+      background: #0051a8;
+    }
+  }
+  
+  &.pending {
+    background: #eab308;
+    color: white;
+  }
+  
+  &.accepted {
+    background: #22c55e;
+    color: white;
+  }
+  
+  &.declined {
+    background: #0070f3;
+    color: white;
+  }
+  
+  &.loading {
+    background: #94a3b8;
+  }
 }

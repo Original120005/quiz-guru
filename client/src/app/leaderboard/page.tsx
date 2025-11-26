@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import FriendRequestButton from '@/components/friends/FriendRequestButton';
 
 interface LeaderboardUser {
   id: number;
@@ -21,6 +22,7 @@ interface UserPosition {
 export default function LeaderboardPage() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([]);
   const [userPosition, setUserPosition] = useState<UserPosition | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -46,6 +48,18 @@ export default function LeaderboardPage() {
         const data = await res.json();
         setLeaderboard(data.leaderboard || []);
         setUserPosition(data.userPosition);
+        
+        // Получаем ID текущего пользователя
+        const userRes = await fetch('http://localhost:5000/api/user/me', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (userRes.ok) {
+          const userData = await userRes.json();
+          setCurrentUserId(userData.user.id);
+        }
       }
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
@@ -101,6 +115,14 @@ export default function LeaderboardPage() {
               <div className="playerPoints">
                 {user.points} очков
               </div>
+
+              {/* Кнопка добавления в друзья */}
+              {currentUserId && (
+                <FriendRequestButton 
+                  targetUserId={user.id}
+                  currentUserId={currentUserId}
+                />
+              )}
             </div>
           ))}
         </div>

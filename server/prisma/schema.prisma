@@ -16,9 +16,11 @@ model User {
   score     Int      @default(0)
   points    Int      @default(0)
   progress  UserQuizProgress[]
-  badges    UserBadge[]  // ← ДОБАВЛЯЕМ СВЯЗЬ
+  badges    UserBadge[]  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  sentFriendships     Friendship[] @relation("SentFriendships")
+  receivedFriendships Friendship[] @relation("ReceivedFriendships")
 
   @@map("users")
 }
@@ -91,3 +93,22 @@ model UserBadge {
   @@unique([userId, badgeId])
   @@map("user_badges")
 }
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED  
+  DECLINED
+}
+
+model Friendship {
+  id        Int      @id @default(autoincrement())
+  senderId  Int
+  sender    User     @relation("SentFriendships", fields: [senderId], references: [id])
+  receiverId Int
+  receiver  User     @relation("ReceivedFriendships", fields: [receiverId], references: [id])
+  status    FriendshipStatus @default(PENDING)
+  createdAt DateTime @default(now())
+  
+  @@unique([senderId, receiverId])
+}
+

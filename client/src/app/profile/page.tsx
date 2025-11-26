@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import FriendsList from '@/components/friends/FriendsList';
+import FriendRequests from '@/components/friends/FriendRequests';
 
 interface User {
   id: number;
@@ -137,43 +139,49 @@ export default function ProfilePage() {
         </div>
 
         {/* Сноска с объяснением системы очков */}
-<div className="pointsExplanation">
-  <strong>🎯 Как зарабатывать очки:</strong>
-  <ul>
-    <li>
-      <div className="pointsItem">
-        <span>Идеальный результат (легкий):</span>
-        <span className="pointsValueInline" style={{color: '#28a745'}}>+10 очков</span>
+        <div className="pointsExplanation">
+          <strong>🎯 Как зарабатывать очки:</strong>
+          <ul>
+            <li>
+              <div className="pointsItem">
+                <span>Идеальный результат (легкий):</span>
+                <span className="pointsValueInline" style={{color: '#28a745'}}>+10 очков</span>
+              </div>
+            </li>
+            <li>
+              <div className="pointsItem">
+                <span>Идеальный результат (средний):</span>
+                <span className="pointsValueInline" style={{color: '#28a745'}}>+20 очков</span>
+              </div>
+            </li>
+            <li>
+              <div className="pointsItem">
+                <span>Идеальный результат (сложный):</span>
+                <span className="pointsValueInline" style={{color: '#28a745'}}>+30 очков</span>
+              </div>
+            </li>
+            <li>
+              <div className="pointsItem">
+                <span>Повторная попытка:</span>
+                <span className="pointsValueInline" style={{color: '#dc3545'}}>-15 очков</span>
+              </div>
+            </li>
+            <li>
+              <div className="pointsItem">
+                <span>Все квизы категории:</span>
+                <span className="pointsValueInline" style={{color: '#28a745'}}>+100 очков</span>
+              </div>
+            </li>
+            <li>Очки не могут быть отрицательными</li>
+          </ul>
+        </div>
       </div>
-    </li>
-    <li>
-      <div className="pointsItem">
-        <span>Идеальный результат (средний):</span>
-        <span className="pointsValueInline" style={{color: '#28a745'}}>+20 очков</span>
-      </div>
-    </li>
-    <li>
-      <div className="pointsItem">
-        <span>Идеальный результат (сложный):</span>
-        <span className="pointsValueInline" style={{color: '#28a745'}}>+30 очков</span>
-      </div>
-    </li>
-    <li>
-      <div className="pointsItem">
-        <span>Повторная попытка:</span>
-        <span className="pointsValueInline" style={{color: '#dc3545'}}>-15 очков</span>
-      </div>
-    </li>
-    <li>
-      <div className="pointsItem">
-        <span>Все квизы категории:</span>
-        <span className="pointsValueInline" style={{color: '#28a745'}}>+100 очков</span>
-      </div>
-    </li>
-    <li>Очки не могут быть отрицательными</li>
-  </ul>
-</div>
-      </div>
+
+      {/* Входящие запросы в друзья */}
+      <FriendRequests />
+
+      {/* Список друзей */}
+      <FriendsList />
 
       {/* Раздел бейджей */}
       <div className="badgesSection">

@@ -6,11 +6,25 @@ import jwt from 'jsonwebtoken';
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret';
 
+// Простая валидация пароля
+const validatePassword = (password: string): { valid: boolean; error?: string } => {
+  if (password.length < 6) {
+    return { valid: false, error: 'Пароль должен быть не менее 6 символов' };
+  }
+  return { valid: true };
+};
+
 export const register = async (req: Request, res: Response) => {
   const { email, password, name } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ error: 'Email и пароль обязательны' });
+  }
+
+  // Валидация пароля
+  const passwordValidation = validatePassword(password);
+  if (!passwordValidation.valid) {
+    return res.status(400).json({ error: passwordValidation.error });
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);

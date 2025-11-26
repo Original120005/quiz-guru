@@ -1,32 +1,41 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Toast from '@/components/common/Toast';
 
-interface FriendRequest {
-  id: number;
-  sender: {
-    id: number;
-    name: string;
-    email: string;
-    points: number;
-    avatar?: string;
-    createdAt: string;
-  };
-  createdAt: string;
+interface FriendRequestButtonProps {
+  targetUserId: number;
 }
 
-export default function FriendRequests() {
-  const [requests, setRequests] = useState<FriendRequest[]>([]);
-  const [loading, setLoading] = useState(true);
+type FriendshipStatus = 'NONE' | 'PENDING' | 'ACCEPTED' | 'DECLINED';
+
+export default function FriendRequestButton({ targetUserId }: FriendRequestButtonProps) {
+  const [status, setStatus] = useState<FriendshipStatus>('NONE');
+  const [loading, setLoading] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
 
   useEffect(() => {
-    fetchFriendRequests();
+    console.log('🟡 FriendRequestButton MOUNTED - targetUserId:', targetUserId);
+    fetchCurrentUserId();
   }, []);
 
-  const fetchFriendRequests = async () => {
+  useEffect(() => {
+    if (currentUserId) {
+      console.log('🟡 Current user ID loaded:', currentUserId);
+      checkFriendshipStatus();
+    }
+  }, [currentUserId, targetUserId]);
+
+  const fetchCurrentUserId = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/friends/requests', {
+      if (!token) {
+        console.log('🔴 No token found');
+        return;
+      }
+
+      const res = await fetch('http://localhost:5000/api/user/me', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -34,122 +43,144 @@ export default function FriendRequests() {
       
       if (res.ok) {
         const data = await res.json();
-        setRequests(data.requests || []);
+        console.log('🟢 Current user data:', data.user);
+        setCurrentUserId(data.user?.id);
+      } else {
+        console.log('🔴 Failed to fetch current user');
       }
     } catch (error) {
-      console.error('Error fetching friend requests:', error);
+      console.error('Error fetching current user ID:', error);
+    }
+  };
+
+  const checkFriendshipStatus = async () => {
+    if (!currentUserId) {
+      console.log('🔴 Cannot check status - no currentUserId');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const url = `http://localhost:5000/api/friends/status/${targetUserId}?t=${Date.now()}`;
+      console.log('🟡 Checking status URL:', url);
+      
+      const res = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Cache-Control': 'no-cache'
+        }
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        console.log('🟢 Status API response:', data);
+        setStatus(data.status);
+      } else {
+        console.error('🔴 Status check failed:', res.status);
+      }
+    } catch (error) {
+      console.error('Error checking friendship status:', error);
+    }
+  };
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
+    setToast({ message, type });
+  };
+
+  const sendFriendRequest = async () => {
+    if (loading || !currentUserId) return;
+    
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      console.log('🟡 Sending friend request to:', targetUserId);
+      
+      const res = await fetch('http://localhost:5000/api/friends/request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ receiverId: targetUserId })
+      });
+
+      const data = await res.json();
+      console.log('🟡 Friend request response:', data);
+
+      if (res.ok) {
+        setStatus('PENDING');
+        showToast('Запрос в друзья отправлен!', 'success');
+        
+        // Перепроверяем статус через секунду
+        setTimeout(() => {
+          console.log('🟡 Re-checking status after request');
+          checkFriendshipStatus();
+        }, 1000);
+      } else {
+        showToast(data.error || 'Ошибка отправки запроса', 'error');
+      }
+    } catch (error) {
+      console.error('Error sending friend request:', error);
+      showToast('Ошибка отправки запроса', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  const acceptRequest = async (requestId: number) => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/friends/accept/${requestId}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+  // Не показываем кнопку если это текущий пользователь или ID не загружен
+  if (!currentUserId || targetUserId === currentUserId) {
+    console.log('🟡 Not rendering button - same user or no currentUserId');
+    return null;
+  }
 
-      if (res.ok) {
-        // Убираем принятый запрос из списка
-        setRequests(prev => prev.filter(req => req.id !== requestId));
-        // Можно показать уведомление
-        alert('Запрос в друзья принят!');
-      } else {
-        const data = await res.json();
-        alert(data.error || 'Ошибка принятия запроса');
-      }
-    } catch (error) {
-      console.error('Error accepting friend request:', error);
-      alert('Ошибка принятия запроса');
+  const getButtonText = () => {
+    switch (status) {
+      case 'PENDING':
+        return '📩 Запрос отправлен';
+      case 'ACCEPTED':
+        return '✅ Друзья';
+      case 'DECLINED':
+        return '🔄 Отправить запрос';
+      default:
+        return '👥 Добавить в друзья';
     }
   };
 
-  const declineRequest = async (requestId: number) => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/friends/decline/${requestId}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (res.ok) {
-        // Убираем отклоненный запрос из списка
-        setRequests(prev => prev.filter(req => req.id !== requestId));
-      } else {
-        const data = await res.json();
-        alert(data.error || 'Ошибка отклонения запроса');
-      }
-    } catch (error) {
-      console.error('Error declining friend request:', error);
-      alert('Ошибка отклонения запроса');
+  const getButtonTitle = () => {
+    switch (status) {
+      case 'PENDING':
+        return 'Ожидание ответа от пользователя';
+      case 'ACCEPTED':
+        return 'Вы уже друзья с этим пользователем';
+      case 'DECLINED':
+        return 'Можно отправить запрос повторно';
+      default:
+        return 'Отправить запрос в друзья';
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ru-RU', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
-  };
+  const isDisabled = status === 'PENDING' || status === 'ACCEPTED' || loading;
 
-  if (loading) {
-    return <div className="loadingRequests">Загрузка запросов...</div>;
-  }
-
-  if (requests.length === 0) {
-    return null; // Не показываем секцию если нет запросов
-  }
+  console.log('🟡 Rendering button - status:', status, 'loading:', loading, 'disabled:', isDisabled);
 
   return (
-    <div className="friendRequestsSection">
-      <h3 className="requestsTitle">📥 Запросы в друзья</h3>
-      
-      <div className="requestsList">
-        {requests.map(request => (
-          <div key={request.id} className="requestCard">
-            <div className="requestUser">
-              <div className="userAvatar">
-                {request.sender.avatar ? (
-                  <img src={request.sender.avatar} alt={request.sender.name} />
-                ) : (
-                  <span>{request.sender.name?.[0]?.toUpperCase() || 'U'}</span>
-                )}
-              </div>
-              <div className="userInfo">
-                <div className="userName">{request.sender.name || 'Без имени'}</div>
-                <div className="userDetails">
-                  <span>{request.sender.points} очков</span>
-                  <span>•</span>
-                  <span>На платформе с {formatDate(request.sender.createdAt)}</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="requestActions">
-              <button 
-                onClick={() => acceptRequest(request.id)}
-                className="acceptButton"
-              >
-                ✅ Принять
-              </button>
-              <button 
-                onClick={() => declineRequest(request.id)}
-                className="declineButton"
-              >
-                ❌ Отклонить
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
+    <>
+      <button
+        onClick={sendFriendRequest}
+        disabled={isDisabled}
+        className={`friendRequestButton ${status.toLowerCase()} ${loading ? 'loading' : ''}`}
+        title={getButtonTitle()}
+      >
+        {loading ? '⏳ Отправка...' : getButtonText()}
+      </button>
+
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+    </>
   );
 }

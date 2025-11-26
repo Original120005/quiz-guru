@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import FriendsList from '@/components/friends/FriendsList';
 import FriendRequests from '@/components/friends/FriendRequests';
+import UserSearch from '@/components/friends/UserSearch';
 
 interface User {
   id: number;
@@ -176,6 +177,9 @@ export default function ProfilePage() {
           </ul>
         </div>
       </div>
+
+      {/* Поиск пользователей */}
+      <UserSearch />
 
       {/* Входящие запросы в друзья */}
       <FriendRequests />

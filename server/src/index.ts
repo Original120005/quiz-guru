@@ -24,7 +24,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);  
 app.use('/api/categories', categoryRoutes); 
-app.use('/api/quiz', quizRoutes); // ← раскомментируй когда создашь
+app.use('/api/quiz', quizRoutes);
 app.use('/api/progress', progressRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/badges', badgeRoutes);

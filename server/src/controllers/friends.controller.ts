@@ -8,6 +8,8 @@ export const sendFriendRequest = async (req: Request, res: Response) => {
   const userId = req.userId!;
   const { receiverId } = req.body;
 
+  console.log('🔵 SEND FRIEND REQUEST - userId:', userId, 'receiverId:', receiverId);
+
   if (!receiverId) {
     return res.status(400).json({ error: 'ID получателя обязателен' });
   }
@@ -36,6 +38,8 @@ export const sendFriendRequest = async (req: Request, res: Response) => {
       }
     });
 
+    console.log('🔵 EXISTING FRIENDSHIP:', existingFriendship);
+
     if (existingFriendship) {
       switch (existingFriendship.status) {
         case 'PENDING':
@@ -53,13 +57,15 @@ export const sendFriendRequest = async (req: Request, res: Response) => {
     }
 
     // Создаем новый запрос
-    await prisma.friendship.create({
+    const newFriendship = await prisma.friendship.create({
       data: {
         senderId: userId,
         receiverId,
         status: 'PENDING'
       }
     });
+
+    console.log('🟢 NEW FRIENDSHIP CREATED:', newFriendship);
 
     res.json({ message: 'Запрос в друзья отправлен' });
   } catch (error) {
@@ -212,29 +218,73 @@ export const declineFriendRequest = async (req: Request, res: Response) => {
   }
 };
 
-// Добавляем новую функцию
 export const getFriendshipStatus = async (req: Request, res: Response) => {
   const userId = req.userId!;
   const { targetUserId } = req.params;
 
+  console.log('🔵 CHECKING FRIENDSHIP STATUS - userId:', userId, 'targetUserId:', targetUserId, 'type:', typeof targetUserId);
+
   try {
+    // Преобразуем targetUserId в число
+    const targetId = parseInt(targetUserId);
+    
+    if (isNaN(targetId)) {
+      console.log('🔴 ERROR: targetUserId is not a number:', targetUserId);
+      return res.status(400).json({ error: 'Invalid user ID' });
+    }
+
     const friendship = await prisma.friendship.findFirst({
       where: {
         OR: [
-          { senderId: userId, receiverId: parseInt(targetUserId) },
-          { senderId: parseInt(targetUserId), receiverId: userId }
+          { senderId: userId, receiverId: targetId },
+          { senderId: targetId, receiverId: userId }
         ]
       }
     });
+
+    console.log('🔵 FOUND FRIENDSHIP:', friendship);
 
     let status: string = 'NONE';
     if (friendship) {
       status = friendship.status;
     }
 
+    console.log('🟢 RETURNING STATUS:', status);
     res.json({ status });
   } catch (error) {
     console.error('Error checking friendship status:', error);
     res.status(500).json({ error: 'Ошибка проверки статуса дружбы' });
+  }
+};
+
+// Добавляем новую функцию удаления друга
+export const removeFriend = async (req: Request, res: Response) => {
+  const userId = req.userId!;
+  const { id } = req.params;
+
+  try {
+    // Находим дружбу (в любом направлении)
+    const friendship = await prisma.friendship.findFirst({
+      where: {
+        OR: [
+          { senderId: userId, receiverId: parseInt(id), status: 'ACCEPTED' },
+          { senderId: parseInt(id), receiverId: userId, status: 'ACCEPTED' }
+        ]
+      }
+    });
+
+    if (!friendship) {
+      return res.status(404).json({ error: 'Друг не найден' });
+    }
+
+    // Удаляем запись о дружбе
+    await prisma.friendship.delete({
+      where: { id: friendship.id }
+    });
+
+    res.json({ message: 'Друг удален' });
+  } catch (error) {
+    console.error('Error removing friend:', error);
+    res.status(500).json({ error: 'Ошибка удаления друга' });
   }
 };

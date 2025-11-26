@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Toast from '@/components/common/Toast';
 
 interface FriendRequest {
   id: number;
@@ -18,6 +19,7 @@ interface FriendRequest {
 export default function FriendRequests() {
   const [requests, setRequests] = useState<FriendRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
 
   useEffect(() => {
     fetchFriendRequests();
@@ -38,12 +40,17 @@ export default function FriendRequests() {
       }
     } catch (error) {
       console.error('Error fetching friend requests:', error);
+      showToast('Ошибка загрузки запросов', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  const acceptRequest = async (requestId: number) => {
+  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
+    setToast({ message, type });
+  };
+
+  const acceptRequest = async (requestId: number, userName: string) => {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(`http://localhost:5000/api/friends/accept/${requestId}`, {
@@ -55,18 +62,18 @@ export default function FriendRequests() {
 
       if (res.ok) {
         setRequests(prev => prev.filter(req => req.id !== requestId));
-        alert('Запрос в друзья принят!');
+        showToast(`Запрос от ${userName} принят! 🎉`, 'success');
       } else {
         const data = await res.json();
-        alert(data.error || 'Ошибка принятия запроса');
+        showToast(data.error || 'Ошибка принятия запроса', 'error');
       }
     } catch (error) {
       console.error('Error accepting friend request:', error);
-      alert('Ошибка принятия запроса');
+      showToast('Ошибка принятия запроса', 'error');
     }
   };
 
-  const declineRequest = async (requestId: number) => {
+  const declineRequest = async (requestId: number, userName: string) => {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(`http://localhost:5000/api/friends/decline/${requestId}`, {
@@ -78,13 +85,14 @@ export default function FriendRequests() {
 
       if (res.ok) {
         setRequests(prev => prev.filter(req => req.id !== requestId));
+        showToast(`Запрос от ${userName} отклонен`, 'info');
       } else {
         const data = await res.json();
-        alert(data.error || 'Ошибка отклонения запроса');
+        showToast(data.error || 'Ошибка отклонения запроса', 'error');
       }
     } catch (error) {
       console.error('Error declining friend request:', error);
-      alert('Ошибка отклонения запроса');
+      showToast('Ошибка отклонения запроса', 'error');
     }
   };
 
@@ -107,7 +115,7 @@ export default function FriendRequests() {
 
   return (
     <div className="friendRequestsSection">
-      <h3 className="requestsTitle">📥 Запросы в друзья</h3>
+      <h3 className="requestsTitle">📥 Запросы в друзья ({requests.length})</h3>
       
       <div className="requestsList">
         {requests.map(request => (
@@ -132,13 +140,13 @@ export default function FriendRequests() {
             
             <div className="requestActions">
               <button 
-                onClick={() => acceptRequest(request.id)}
+                onClick={() => acceptRequest(request.id, request.sender.name || 'пользователя')}
                 className="acceptButton"
               >
                 ✅ Принять
               </button>
               <button 
-                onClick={() => declineRequest(request.id)}
+                onClick={() => declineRequest(request.id, request.sender.name || 'пользователя')}
                 className="declineButton"
               >
                 ❌ Отклонить
@@ -147,6 +155,14 @@ export default function FriendRequests() {
           </div>
         ))}
       </div>
+
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }
